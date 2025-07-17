@@ -2,8 +2,12 @@
 
 #include "network_headers.h"
 #include <string>
+#include <string_view>
 #include <vector>
+#include <array>
 #include <iostream>
+#include <cctype>
+#include <stdexcept>
 
 namespace cppscapy {
 namespace utils {
@@ -17,8 +21,78 @@ void print_hex_ascii(const std::vector<uint8_t>& data, const std::string& descri
 // Convert packet to hex string
 std::string to_hex_string(const std::vector<uint8_t>& data);
 
+// Convert array to hex string (constexpr version)
+template<size_t N>
+constexpr std::array<char, N * 2 + 1> to_hex_string_array(const std::array<uint8_t, N>& data);
+
+// Template implementation for to_hex_string_array
+template<size_t N>
+constexpr std::array<char, N * 2 + 1> to_hex_string_array(const std::array<uint8_t, N>& data) {
+    std::array<char, N * 2 + 1> result = {};
+    constexpr char hex_chars[] = "0123456789abcdef";
+    
+    for (size_t i = 0; i < N; ++i) {
+        result[i * 2] = hex_chars[data[i] >> 4];
+        result[i * 2 + 1] = hex_chars[data[i] & 0x0F];
+    }
+    result[N * 2] = '\0';
+    
+    return result;
+}
+
 // Parse hex string back to packet
 std::vector<uint8_t> from_hex_string(const std::string& hex_str);
+
+// Convert hex string to fixed-size array (e.g., MAC addresses, IP addresses)
+template<size_t N>
+constexpr std::array<uint8_t, N> from_hex_string_array(std::string_view hex_str);
+
+// Template implementation for from_hex_string_array
+template<size_t N>
+constexpr std::array<uint8_t, N> from_hex_string_array(std::string_view hex_str) {
+    std::array<uint8_t, N> result = {};
+    size_t clean_hex_pos = 0;
+    char clean_hex[N * 2] = {};
+    
+    // Remove spaces, colons, and convert to lowercase
+    for (size_t i = 0; i < hex_str.length() && clean_hex_pos < N * 2; ++i) {
+        char c = hex_str[i];
+        if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
+            clean_hex[clean_hex_pos++] = (c >= 'A' && c <= 'F') ? c + 32 : c; // to lowercase
+        }
+    }
+    
+    // Check if we have enough hex characters for the array size
+    if (clean_hex_pos < N * 2) {
+        throw std::invalid_argument("Not enough hex data for array size");
+    }
+    
+    // Convert pairs of hex characters to bytes
+    for (size_t i = 0; i < N; ++i) {
+        auto hex_to_byte = [](char c) -> uint8_t {
+            if (c >= '0' && c <= '9') return c - '0';
+            if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+            return 0;
+        };
+        
+        result[i] = (hex_to_byte(clean_hex[i * 2]) << 4) | hex_to_byte(clean_hex[i * 2 + 1]);
+    }
+    
+    return result;
+}
+
+// Convenience functions for common array sizes
+constexpr inline std::array<uint8_t, 6> mac_from_hex_string(std::string_view hex_str) {
+    return from_hex_string_array<6>(hex_str);
+}
+
+constexpr inline std::array<uint8_t, 4> ipv4_from_hex_string(std::string_view hex_str) {
+    return from_hex_string_array<4>(hex_str);
+}
+
+constexpr inline std::array<uint8_t, 16> ipv6_from_hex_string(std::string_view hex_str) {
+    return from_hex_string_array<16>(hex_str);
+}
 
 // Calculate and verify checksums
 uint16_t calculate_ip_checksum(const std::vector<uint8_t>& header);
