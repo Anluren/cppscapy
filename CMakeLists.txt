@@ -53,3 +53,24 @@ add_executable(constexpr_test
 )
 
 target_link_libraries(constexpr_test cppscapy)
+
+# Auto hex test
+add_executable(auto_hex_test
+    examples/auto_hex_test.cpp
+)
+
+target_link_libraries(auto_hex_test cppscapy)
+
+# Length deduction demo
+add_executable(length_deduction_demo
+    examples/length_deduction_demo.cpp
+)
+
+target_link_libraries(length_deduction_demo cppscapy)
+
+# Quick deduction example
+add_executable(quick_deduction_example
+    examples/quick_deduction_example.cpp
+)
+
+target_link_libraries(quick_deduction_example cppscapy)

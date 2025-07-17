@@ -47,6 +47,29 @@ std::vector<uint8_t> from_hex_string(const std::string& hex_str);
 template<size_t N>
 constexpr std::array<uint8_t, N> from_hex_string_array(std::string_view hex_str);
 
+// Convert hex string to auto-sized array (assumes only hex characters)
+template<size_t N>
+constexpr std::array<uint8_t, N / 2> from_hex_string_auto(const char (&hex_str)[N]) {
+    static_assert(N > 1, "Hex string must not be empty");
+    static_assert((N - 1) % 2 == 0, "Hex string must have even number of characters");
+    
+    constexpr size_t array_size = (N - 1) / 2;  // -1 for null terminator
+    std::array<uint8_t, array_size> result = {};
+    
+    constexpr auto hex_to_byte = [](char c) -> uint8_t {
+        if (c >= '0' && c <= '9') return c - '0';
+        if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+        if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+        return 0;
+    };
+    
+    for (size_t i = 0; i < array_size; ++i) {
+        result[i] = (hex_to_byte(hex_str[i * 2]) << 4) | hex_to_byte(hex_str[i * 2 + 1]);
+    }
+    
+    return result;
+}
+
 // Template implementation for from_hex_string_array
 template<size_t N>
 constexpr std::array<uint8_t, N> from_hex_string_array(std::string_view hex_str) {
@@ -92,6 +115,21 @@ constexpr inline std::array<uint8_t, 4> ipv4_from_hex_string(std::string_view he
 
 constexpr inline std::array<uint8_t, 16> ipv6_from_hex_string(std::string_view hex_str) {
     return from_hex_string_array<16>(hex_str);
+}
+
+// Convenience functions using automatic length deduction
+// Note: These create the arrays at compile time, but the address constructors are not constexpr
+template<size_t N>
+auto make_mac_address(const char (&hex_str)[N]) {
+    static_assert(N == 13, "MAC address hex string must be exactly 12 characters plus null terminator");
+    return cppscapy::MacAddress(from_hex_string_auto(hex_str));
+}
+
+template<size_t N>
+auto make_ipv4_address(const char (&hex_str)[N]) {
+    static_assert(N == 9, "IPv4 address hex string must be exactly 8 characters plus null terminator");
+    auto bytes = from_hex_string_auto(hex_str);
+    return cppscapy::IPv4Address(bytes[0], bytes[1], bytes[2], bytes[3]);
 }
 
 // Calculate and verify checksums

@@ -33,6 +33,33 @@ make
 ./simple_test
 ```
 
+## New Features
+
+### ✨ Compile-Time Length Deduction
+
+CppScapy now supports automatic length deduction for hex strings at compile time! No need to specify array sizes manually:
+
+```cpp
+#include "utils.h"
+using namespace cppscapy::utils;
+
+// Automatically deduces array size from hex string length
+constexpr auto mac_bytes = from_hex_string_auto("001122334455");    // 6 bytes
+constexpr auto ipv4_bytes = from_hex_string_auto("C0A80101");       // 4 bytes
+constexpr auto custom_bytes = from_hex_string_auto("ABCD");         // 2 bytes
+
+// Compile-time validation
+static_assert(mac_bytes.size() == 6);
+static_assert(ipv4_bytes.size() == 4);
+static_assert(custom_bytes.size() == 2);
+
+// Works with any hex string length
+constexpr auto single_byte = from_hex_string_auto("FF");            // 1 byte
+constexpr auto long_key = from_hex_string_auto("0123456789ABCDEF"); // 8 bytes
+```
+
+For more details, see [COMPILE_TIME_LENGTH_DEDUCTION.md](COMPILE_TIME_LENGTH_DEDUCTION.md).
+
 ## API Overview
 
 ### MAC Address
