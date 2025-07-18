@@ -154,6 +154,60 @@ uint16_t calculate_tcp_checksum(const std::vector<uint8_t>& tcp_header,
     return calculate_ip_checksum(combined);
 }
 
+// Verify IPv4 header checksum - raw pointer version
+bool verify_ipv4_checksum(const uint8_t* data, size_t length) {
+    if (!data || length < 20) {
+        return false; // Invalid data or length too short for IPv4 header
+    }
+    
+    // Get the IHL (Internet Header Length) from the header
+    uint8_t ihl = (data[0] & 0x0F) * 4; // IHL is in 4-byte words
+    
+    if (length < ihl || ihl < 20) {
+        return false; // Invalid header length
+    }
+    
+    // Calculate checksum for the IPv4 header
+    uint32_t sum = 0;
+    
+    // Sum all 16-bit words, skipping the checksum field (bytes 10-11)
+    for (size_t i = 0; i < ihl; i += 2) {
+        if (i == 10) {
+            // Skip the checksum field - treat as zero
+            continue;
+        }
+        
+        uint16_t word;
+        if (i + 1 < ihl) {
+            word = (data[i] << 8) + data[i + 1];
+        } else {
+            word = data[i] << 8; // Last byte if odd length
+        }
+        sum += word;
+    }
+    
+    // Fold 32-bit sum to 16 bits
+    while (sum >> 16) {
+        sum = (sum & 0xFFFF) + (sum >> 16);
+    }
+    
+    // Get the checksum from the header
+    uint16_t header_checksum = (data[10] << 8) + data[11];
+    
+    // The calculated checksum should be the complement of the header checksum
+    uint16_t calculated_checksum = ~sum;
+    
+    return calculated_checksum == header_checksum;
+}
+
+// Verify IPv4 header checksum - vector version
+bool verify_ipv4_checksum(const std::vector<uint8_t>& header) {
+    if (header.empty()) {
+        return false;
+    }
+    return verify_ipv4_checksum(header.data(), header.size());
+}
+
 // Parse packet and extract information
 PacketInfo analyze_packet(const std::vector<uint8_t>& packet) {
     PacketInfo info;

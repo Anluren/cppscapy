@@ -304,4 +304,112 @@ make
 ./quick_usage   # Quick usage examples
 ```
 
+## Utility Functions
+
+### Checksum Functions
+```cpp
+// Calculate IPv4 header checksum
+uint16_t calculate_ip_checksum(const std::vector<uint8_t>& header);
+
+// Verify IPv4 header checksum (raw pointer version)
+bool verify_ipv4_checksum(const uint8_t* data, size_t length);
+
+// Verify IPv4 header checksum (vector version)
+bool verify_ipv4_checksum(const std::vector<uint8_t>& header);
+
+// Calculate TCP checksum with pseudo-header
+uint16_t calculate_tcp_checksum(const std::vector<uint8_t>& tcp_header, 
+                               const IPv4Address& src_ip, 
+                               const IPv4Address& dst_ip,
+                               const std::vector<uint8_t>& payload = {});
+```
+
+### Hex String Utilities
+```cpp
+// Convert packet to hex string
+std::string to_hex_string(const std::vector<uint8_t>& data);
+
+// Convert array to hex string (constexpr version)
+template<size_t N>
+constexpr std::array<char, N * 2 + 1> to_hex_string_array(const std::array<uint8_t, N>& data);
+
+// Parse hex string back to packet
+std::vector<uint8_t> from_hex_string(const std::string& hex_str);
+
+// Convert hex string to fixed-size array
+template<size_t N>
+constexpr std::array<uint8_t, N> from_hex_string_array(std::string_view hex_str);
+
+// Convert hex string to auto-sized array (compile-time length deduction)
+template<size_t N>
+constexpr std::array<uint8_t, N / 2> from_hex_string_auto(const char (&hex_str)[N]);
+
+// Convenience functions for common types
+constexpr std::array<uint8_t, 6> mac_from_hex_string(std::string_view hex_str);
+constexpr std::array<uint8_t, 4> ipv4_from_hex_string(std::string_view hex_str);
+constexpr std::array<uint8_t, 16> ipv6_from_hex_string(std::string_view hex_str);
+```
+
+### Print Utilities
+```cpp
+// Print packet in hex format
+void print_hex(const std::vector<uint8_t>& data, const std::string& description = "");
+
+// Print packet in both hex and ASCII
+void print_hex_ascii(const std::vector<uint8_t>& data, const std::string& description = "");
+```
+
+### Packet Analysis
+```cpp
+// Analyze packet and extract protocol information
+PacketInfo analyze_packet(const std::vector<uint8_t>& packet);
+
+// PacketInfo structure contains:
+struct PacketInfo {
+    bool has_ethernet, has_ipv4, has_ipv6, has_tcp, has_udp, has_icmp;
+    MacAddress src_mac, dst_mac;
+    uint16_t ethertype;
+    IPv4Address src_ipv4, dst_ipv4;
+    uint8_t ip_protocol;
+    uint16_t src_port, dst_port;
+    size_t payload_offset, payload_size;
+};
+```
+
+### Payload Generators
+```cpp
+// Generate random payload for testing
+std::vector<uint8_t> generate_random_payload(size_t size);
+
+// Generate HTTP GET request
+std::vector<uint8_t> generate_http_get_request(const std::string& host, const std::string& path = "/");
+
+// Generate DNS query
+std::vector<uint8_t> generate_dns_query(const std::string& domain);
+```
+
+### Common Constants
+```cpp
+// Common port numbers
+namespace ports {
+    constexpr uint16_t HTTP = 80;
+    constexpr uint16_t HTTPS = 443;
+    constexpr uint16_t FTP = 21;
+    constexpr uint16_t SSH = 22;
+    constexpr uint16_t DNS = 53;
+    // ... more ports
+}
+
+// Common IP addresses
+namespace common_ips {
+    IPv4Address google_dns1();      // 8.8.8.8
+    IPv4Address google_dns2();      // 8.8.4.4
+    IPv4Address cloudflare_dns1();  // 1.1.1.1
+    IPv4Address cloudflare_dns2();  // 1.0.0.1
+    IPv4Address private_192();      // 192.168.1.1
+    IPv4Address private_10();       // 10.0.0.1
+    IPv4Address private_172();      // 172.16.0.1
+}
+```
+
 This library provides a complete, type-safe, and convenient API for constructing network packets at various layers of the network stack.

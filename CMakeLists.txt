@@ -74,3 +74,10 @@ add_executable(quick_deduction_example
 )
 
 target_link_libraries(quick_deduction_example cppscapy)
+
+# IPv4 checksum test
+add_executable(ipv4_checksum_test
+    examples/ipv4_checksum_test.cpp
+)
+
+target_link_libraries(ipv4_checksum_test cppscapy)

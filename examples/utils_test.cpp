@@ -112,6 +112,29 @@ int main() {
     std::cout << "HTTP port: " << ports::HTTP << "\n";
     std::cout << "HTTPS port: " << ports::HTTPS << "\n";
     
+    // Test IPv4 checksum verification
+    std::cout << "\n6. Testing IPv4 checksum verification:\n";
+    
+    // Create a test IPv4 header
+    IPv4Address test_src("192.168.1.100");
+    IPv4Address test_dst("10.0.0.1");
+    IPv4Header test_ipv4(test_src, test_dst, IPv4Header::PROTOCOL_TCP);
+    test_ipv4.ttl(64).id(12345).length(40);
+    
+    auto test_header = test_ipv4.to_bytes();
+    bool checksum_valid = verify_ipv4_checksum(test_header);
+    std::cout << "IPv4 header checksum valid: " << (checksum_valid ? "Yes" : "No") << "\n";
+    
+    // Test with corrupted checksum
+    auto corrupted = test_header;
+    corrupted[10] ^= 0xFF; // Corrupt checksum
+    bool corrupted_valid = verify_ipv4_checksum(corrupted);
+    std::cout << "Corrupted checksum valid: " << (corrupted_valid ? "Yes" : "No") << "\n";
+    
+    // Test raw pointer version
+    bool pointer_valid = verify_ipv4_checksum(test_header.data(), test_header.size());
+    std::cout << "Raw pointer checksum valid: " << (pointer_valid ? "Yes" : "No") << "\n";
+
     std::cout << "\n=== Utils Tests Complete ===\n";
     return 0;
 }

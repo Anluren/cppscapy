@@ -139,6 +139,12 @@ uint16_t calculate_tcp_checksum(const std::vector<uint8_t>& tcp_header,
                                const IPv4Address& dst_ip,
                                const std::vector<uint8_t>& payload = {});
 
+// Verify IPv4 header checksum - raw pointer version
+bool verify_ipv4_checksum(const uint8_t* data, size_t length);
+
+// Verify IPv4 header checksum - vector version
+bool verify_ipv4_checksum(const std::vector<uint8_t>& header);
+
 // Packet analysis utilities
 struct PacketInfo {
     bool has_ethernet = false;
