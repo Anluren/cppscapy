@@ -12,6 +12,7 @@ namespace cppscapy {
 class EthernetHeader;
 class IPv4Header;
 class IPv6Header;
+class MPLSHeader;
 class TCPHeader;
 class UDPHeader;
 class ICMPHeader;
@@ -96,6 +97,8 @@ public:
     static constexpr uint16_t ETHERTYPE_IPV4 = 0x0800;
     static constexpr uint16_t ETHERTYPE_IPV6 = 0x86DD;
     static constexpr uint16_t ETHERTYPE_ARP = 0x0806;
+    static constexpr uint16_t ETHERTYPE_MPLS = 0x8847;      // MPLS unicast
+    static constexpr uint16_t ETHERTYPE_MPLS_MCAST = 0x8848; // MPLS multicast
     
 private:
     MacAddress dst_;
@@ -203,6 +206,42 @@ private:
     uint8_t hop_limit_ = 64;
     IPv6Address src_;
     IPv6Address dst_;
+};
+
+// MPLS Header
+class MPLSHeader {
+public:
+    static constexpr size_t SIZE = 4;
+    
+    MPLSHeader() = default;
+    MPLSHeader(uint32_t label, uint8_t tc = 0, bool bottom_of_stack = true, uint8_t ttl = 64);
+    
+    MPLSHeader& label(uint32_t label_val) { label_ = label_val & 0xFFFFF; return *this; } // 20 bits
+    MPLSHeader& traffic_class(uint8_t tc) { traffic_class_ = tc & 0x7; return *this; }    // 3 bits
+    MPLSHeader& bottom_of_stack(bool bos) { bottom_of_stack_ = bos; return *this; }       // 1 bit
+    MPLSHeader& ttl(uint8_t ttl_val) { ttl_ = ttl_val; return *this; }                   // 8 bits
+    
+    uint32_t label() const { return label_; }
+    uint8_t traffic_class() const { return traffic_class_; }
+    bool bottom_of_stack() const { return bottom_of_stack_; }
+    uint8_t ttl() const { return ttl_; }
+    
+    std::vector<uint8_t> to_bytes() const;
+    
+    // Common MPLS labels
+    static constexpr uint32_t LABEL_IPV4_EXPLICIT_NULL = 0;
+    static constexpr uint32_t LABEL_ROUTER_ALERT = 1;
+    static constexpr uint32_t LABEL_IPV6_EXPLICIT_NULL = 2;
+    static constexpr uint32_t LABEL_IMPLICIT_NULL = 3;
+    static constexpr uint32_t LABEL_ENTROPY = 7;
+    static constexpr uint32_t LABEL_GAL = 13; // Generic Associated Channel Label
+    static constexpr uint32_t LABEL_OAM_ALERT = 14;
+    
+private:
+    uint32_t label_ = 0;           // 20 bits: Label value
+    uint8_t traffic_class_ = 0;    // 3 bits: Traffic Class (formerly EXP)
+    bool bottom_of_stack_ = true;  // 1 bit: Bottom of Stack
+    uint8_t ttl_ = 64;            // 8 bits: Time to Live
 };
 
 // TCP Header
@@ -322,6 +361,7 @@ public:
     PacketBuilder& ethernet(const EthernetHeader& eth);
     PacketBuilder& ipv4(const IPv4Header& ip);
     PacketBuilder& ipv6(const IPv6Header& ip);
+    PacketBuilder& mpls(const MPLSHeader& mpls);
     PacketBuilder& tcp(const TCPHeader& tcp);
     PacketBuilder& udp(const UDPHeader& udp);
     PacketBuilder& icmp(const ICMPHeader& icmp);
@@ -366,6 +406,17 @@ namespace patterns {
     std::vector<uint8_t> ethernet_frame(
         const MacAddress& src_mac, const MacAddress& dst_mac,
         uint16_t ethertype, const std::vector<uint8_t>& payload = {});
+    
+    // Create MPLS packet
+    std::vector<uint8_t> mpls_packet(
+        uint32_t label, uint8_t ttl = 64, uint8_t tc = 0,
+        const std::vector<uint8_t>& payload = {});
+    
+    // Create MPLS over Ethernet frame
+    std::vector<uint8_t> mpls_ethernet_frame(
+        const MacAddress& src_mac, const MacAddress& dst_mac,
+        uint32_t label, uint8_t ttl = 64, uint8_t tc = 0,
+        const std::vector<uint8_t>& payload = {});
 }
 
 } // namespace cppscapy

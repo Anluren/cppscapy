@@ -88,3 +88,10 @@ add_executable(checksum_methods_test
 )
 
 target_link_libraries(checksum_methods_test cppscapy)
+
+# MPLS test
+add_executable(mpls_test
+    examples/mpls_test.cpp
+)
+
+target_link_libraries(mpls_test cppscapy)

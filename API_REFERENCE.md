@@ -78,6 +78,8 @@ std::vector<uint8_t> to_bytes() const;
 static constexpr uint16_t ETHERTYPE_IPV4 = 0x0800;
 static constexpr uint16_t ETHERTYPE_IPV6 = 0x86DD;
 static constexpr uint16_t ETHERTYPE_ARP = 0x0806;
+static constexpr uint16_t ETHERTYPE_MPLS = 0x8847;
+static constexpr uint16_t ETHERTYPE_MPLS_MCAST = 0x8848;
 ```
 
 #### IPv4Header
@@ -131,6 +133,37 @@ std::vector<uint8_t> to_bytes() const;
 static constexpr uint8_t NEXT_HEADER_TCP = 6;
 static constexpr uint8_t NEXT_HEADER_UDP = 17;
 static constexpr uint8_t NEXT_HEADER_ICMPV6 = 58;
+```
+
+#### MPLSHeader
+```cpp
+// Constructor
+MPLSHeader();
+MPLSHeader(uint32_t label, uint8_t tc = 0, bool bottom_of_stack = true, uint8_t ttl = 64);
+
+// Fluent API
+MPLSHeader& label(uint32_t label_val);        // 20-bit label
+MPLSHeader& traffic_class(uint8_t tc);        // 3-bit traffic class
+MPLSHeader& bottom_of_stack(bool bos);        // 1-bit bottom of stack
+MPLSHeader& ttl(uint8_t ttl_val);             // 8-bit TTL
+
+// Getters
+uint32_t label() const;
+uint8_t traffic_class() const;
+bool bottom_of_stack() const;
+uint8_t ttl() const;
+
+// Serialization
+std::vector<uint8_t> to_bytes() const;
+
+// Special MPLS label constants (RFC 3032)
+static constexpr uint32_t LABEL_IPV4_EXPLICIT_NULL = 0;
+static constexpr uint32_t LABEL_ROUTER_ALERT = 1;
+static constexpr uint32_t LABEL_IPV6_EXPLICIT_NULL = 2;
+static constexpr uint32_t LABEL_IMPLICIT_NULL = 3;
+static constexpr uint32_t LABEL_ENTROPY = 7;
+static constexpr uint32_t LABEL_GAL = 13;        // Generic Associated Channel Label
+static constexpr uint32_t LABEL_OAM_ALERT = 14;
 ```
 
 #### TCPHeader
@@ -203,6 +236,7 @@ static constexpr uint8_t TYPE_TIME_EXCEEDED = 11;
 PacketBuilder& ethernet(const EthernetHeader& eth);
 PacketBuilder& ipv4(const IPv4Header& ip);
 PacketBuilder& ipv6(const IPv6Header& ip);
+PacketBuilder& mpls(const MPLSHeader& mpls);
 PacketBuilder& tcp(const TCPHeader& tcp);
 PacketBuilder& udp(const UDPHeader& udp);
 PacketBuilder& icmp(const ICMPHeader& icmp);
@@ -247,6 +281,17 @@ namespace patterns {
     std::vector<uint8_t> ethernet_frame(
         const MacAddress& src_mac, const MacAddress& dst_mac,
         uint16_t ethertype, const std::vector<uint8_t>& payload = {});
+    
+    // Create MPLS packet
+    std::vector<uint8_t> mpls_packet(
+        uint32_t label, uint8_t ttl, uint8_t traffic_class = 0,
+        const std::vector<uint8_t>& payload = {});
+    
+    // Create MPLS over Ethernet frame
+    std::vector<uint8_t> mpls_ethernet_frame(
+        const MacAddress& src_mac, const MacAddress& dst_mac,
+        uint32_t label, uint8_t ttl, uint8_t traffic_class = 0,
+        const std::vector<uint8_t>& payload = {});
 }
 ```
 
@@ -289,6 +334,44 @@ auto ping = patterns::icmp_ping(
     IPv4Address("192.168.1.100"),
     IPv4Address("8.8.8.8"),
     1, 1);
+```
+
+#### MPLS Label Switching
+```cpp
+// Create MPLS header with label
+MPLSHeader mpls(1000, 3, true, 64);  // label=1000, tc=3, bottom_of_stack=true, ttl=64
+
+// Build MPLS over Ethernet packet
+PacketBuilder builder;
+auto mpls_packet = builder
+    .ethernet(EthernetHeader(
+        MacAddress("aa:bb:cc:dd:ee:ff"), 
+        MacAddress("11:22:33:44:55:66"), 
+        EthernetHeader::ETHERTYPE_MPLS))
+    .mpls(mpls)
+    .payload("MPLS payload")
+    .build();
+```
+
+#### MPLS Label Stack
+```cpp
+// Create multiple MPLS labels (label stack)
+MPLSHeader outer_label(2000, 1, false, 64);  // Not bottom of stack
+MPLSHeader inner_label(3000, 2, true, 64);   // Bottom of stack
+
+auto stacked_packet = PacketBuilder()
+    .ethernet(EthernetHeader(dst_mac, src_mac, EthernetHeader::ETHERTYPE_MPLS))
+    .mpls(outer_label)
+    .mpls(inner_label)
+    .payload("Stacked MPLS")
+    .build();
+```
+
+#### Quick MPLS Patterns
+```cpp
+// Using convenience patterns
+auto mpls_packet = patterns::mpls_packet(500, 128, 2, {0xDE, 0xAD, 0xBE, 0xEF});
+auto mpls_eth = patterns::mpls_ethernet_frame(src_mac, dst_mac, 750, 200, 4, payload);
 ```
 
 ### Build Instructions

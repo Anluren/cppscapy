@@ -125,6 +125,12 @@ PacketBuilder& PacketBuilder::ipv6(const IPv6Header& ip) {
     return *this;
 }
 
+PacketBuilder& PacketBuilder::mpls(const MPLSHeader& mpls) {
+    auto bytes = mpls.to_bytes();
+    packet_.insert(packet_.end(), bytes.begin(), bytes.end());
+    return *this;
+}
+
 PacketBuilder& PacketBuilder::tcp(const TCPHeader& tcp) {
     auto bytes = tcp.to_bytes();
     packet_.insert(packet_.end(), bytes.begin(), bytes.end());
@@ -252,6 +258,31 @@ std::vector<uint8_t> ethernet_frame(
     return builder.build();
 }
 
-} // namespace patterns
+std::vector<uint8_t> mpls_packet(
+    uint32_t label, uint8_t ttl, uint8_t tc,
+    const std::vector<uint8_t>& payload) {
+    
+    MPLSHeader mpls(label, tc, true, ttl);
+    
+    PacketBuilder builder;
+    builder.mpls(mpls).payload(payload);
+    
+    return builder.build();
+}
 
+std::vector<uint8_t> mpls_ethernet_frame(
+    const MacAddress& src_mac, const MacAddress& dst_mac,
+    uint32_t label, uint8_t ttl, uint8_t tc,
+    const std::vector<uint8_t>& payload) {
+    
+    EthernetHeader eth(dst_mac, src_mac, EthernetHeader::ETHERTYPE_MPLS);
+    MPLSHeader mpls(label, tc, true, ttl);
+    
+    PacketBuilder builder;
+    builder.ethernet(eth).mpls(mpls).payload(payload);
+    
+    return builder.build();
+}
+
+} // namespace patterns
 } // namespace cppscapy

@@ -291,4 +291,32 @@ std::vector<uint8_t> IPv6Header::to_bytes() const {
     return result;
 }
 
+// MPLS Header implementation
+MPLSHeader::MPLSHeader(uint32_t label, uint8_t tc, bool bottom_of_stack, uint8_t ttl)
+    : label_(label & 0xFFFFF), traffic_class_(tc & 0x7), bottom_of_stack_(bottom_of_stack), ttl_(ttl) {}
+
+std::vector<uint8_t> MPLSHeader::to_bytes() const {
+    std::vector<uint8_t> result;
+    result.reserve(SIZE);
+    
+    // Pack all fields into 32-bit word:
+    // 20 bits: Label
+    // 3 bits: Traffic Class (TC)
+    // 1 bit: Bottom of Stack (S)
+    // 8 bits: TTL
+    uint32_t mpls_word = 0;
+    mpls_word |= (label_ & 0xFFFFF) << 12;           // Label: bits 31-12
+    mpls_word |= (traffic_class_ & 0x7) << 9;        // TC: bits 11-9
+    mpls_word |= (bottom_of_stack_ ? 1 : 0) << 8;    // S: bit 8
+    mpls_word |= (ttl_ & 0xFF);                      // TTL: bits 7-0
+    
+    // Convert to bytes in network byte order (big endian)
+    result.push_back((mpls_word >> 24) & 0xFF);
+    result.push_back((mpls_word >> 16) & 0xFF);
+    result.push_back((mpls_word >> 8) & 0xFF);
+    result.push_back(mpls_word & 0xFF);
+    
+    return result;
+}
+
 } // namespace cppscapy
