@@ -81,3 +81,10 @@ add_executable(ipv4_checksum_test
 )
 
 target_link_libraries(ipv4_checksum_test cppscapy)
+
+# Checksum methods test
+add_executable(checksum_methods_test
+    examples/checksum_methods_test.cpp
+)
+
+target_link_libraries(checksum_methods_test cppscapy)

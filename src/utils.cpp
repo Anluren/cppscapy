@@ -117,6 +117,30 @@ uint16_t calculate_ip_checksum(const std::vector<uint8_t>& header) {
     return ~sum;
 }
 
+// Calculate IPv4 header checksum (automatically clears checksum field)
+uint16_t calculate_ipv4_header_checksum(const std::vector<uint8_t>& header) {
+    if (header.size() < 20) {
+        throw std::invalid_argument("IPv4 header too short");
+    }
+    
+    // Get the IHL (Internet Header Length) from the header
+    uint8_t ihl = (header[0] & 0x0F) * 4; // IHL is in 4-byte words
+    
+    if (header.size() < ihl || ihl < 20) {
+        throw std::invalid_argument("Invalid IPv4 header length");
+    }
+    
+    // Create a copy of the header and clear the checksum field
+    std::vector<uint8_t> header_copy = header;
+    header_copy[10] = 0; // Clear checksum field
+    header_copy[11] = 0;
+    
+    // Resize to actual header length (in case input is longer)
+    header_copy.resize(ihl);
+    
+    return calculate_ip_checksum(header_copy);
+}
+
 // Calculate TCP checksum (simplified - doesn't include pseudo-header)
 uint16_t calculate_tcp_checksum(const std::vector<uint8_t>& tcp_header, 
                                const IPv4Address& src_ip, 

@@ -308,8 +308,11 @@ make
 
 ### Checksum Functions
 ```cpp
-// Calculate IPv4 header checksum
+// Generic checksum calculation (assumes checksum field is already cleared)
 uint16_t calculate_ip_checksum(const std::vector<uint8_t>& header);
+
+// IPv4-specific checksum calculation (automatically clears checksum field)
+uint16_t calculate_ipv4_header_checksum(const std::vector<uint8_t>& header);
 
 // Verify IPv4 header checksum (raw pointer version)
 bool verify_ipv4_checksum(const uint8_t* data, size_t length);
@@ -323,6 +326,12 @@ uint16_t calculate_tcp_checksum(const std::vector<uint8_t>& tcp_header,
                                const IPv4Address& dst_ip,
                                const std::vector<uint8_t>& payload = {});
 ```
+
+**Important Note on IPv4 Checksum Calculation:**
+- When calculating IPv4 header checksum, the checksum field (bytes 10-11) must be set to zero first
+- `calculate_ipv4_header_checksum()` automatically handles this requirement
+- `calculate_ip_checksum()` is generic and assumes the checksum field is already cleared
+- Both functions produce identical results when used correctly
 
 ### Hex String Utilities
 ```cpp

@@ -134,6 +134,11 @@ int main() {
     // Test raw pointer version
     bool pointer_valid = verify_ipv4_checksum(test_header.data(), test_header.size());
     std::cout << "Raw pointer checksum valid: " << (pointer_valid ? "Yes" : "No") << "\n";
+    
+    // Test the new IPv4-specific checksum calculation function
+    uint16_t calculated_checksum = calculate_ipv4_header_checksum(test_header);
+    uint16_t original_checksum = (test_header[10] << 8) | test_header[11];
+    std::cout << "calculate_ipv4_header_checksum matches: " << (calculated_checksum == original_checksum ? "Yes" : "No") << "\n";
 
     std::cout << "\n=== Utils Tests Complete ===\n";
     return 0;

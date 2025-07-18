@@ -134,6 +134,10 @@ auto make_ipv4_address(const char (&hex_str)[N]) {
 
 // Calculate and verify checksums
 uint16_t calculate_ip_checksum(const std::vector<uint8_t>& header);
+
+// Calculate IPv4 header checksum (automatically clears checksum field)
+uint16_t calculate_ipv4_header_checksum(const std::vector<uint8_t>& header);
+
 uint16_t calculate_tcp_checksum(const std::vector<uint8_t>& tcp_header, 
                                const IPv4Address& src_ip, 
                                const IPv4Address& dst_ip,
