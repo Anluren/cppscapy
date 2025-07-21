@@ -95,3 +95,17 @@ add_executable(mpls_test
 )
 
 target_link_libraries(mpls_test cppscapy)
+
+# Templated lambda test
+add_executable(templated_lambda_test
+    examples/templated_lambda_test.cpp
+)
+
+target_link_libraries(templated_lambda_test cppscapy)
+
+# String literal detection test
+add_executable(string_literal_test
+    examples/string_literal_test.cpp
+)
+
+target_link_libraries(string_literal_test cppscapy)
