@@ -106,6 +106,16 @@ int main() {
     std::cout << "MPLS packet size: " << mpls_packet.size() << " bytes\n";
     print_hex_ascii(std::vector<uint8_t>(mpls_packet.end() - 48, mpls_packet.end()), "MPLS payload");
     
+    // Test 12: Incremental pattern
+    std::cout << "\n12. Incremental Pattern (values 0-255):\n";
+    auto incremental1 = random::incremental_pattern(20);
+    std::cout << "Size: " << incremental1.size() << " bytes\n";
+    print_hex(incremental1, "Incremental pattern (20 bytes)");
+    
+    auto incremental2 = random::incremental_pattern(20, 240);
+    std::cout << "Size: " << incremental2.size() << " bytes\n";
+    print_hex(incremental2, "Incremental pattern starting from 240");
+    
     // Performance comparison
     std::cout << "\n=== Performance Comparison ===\n";
     const size_t large_size = 1024;

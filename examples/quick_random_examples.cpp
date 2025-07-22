@@ -68,6 +68,17 @@ int main() {
     std::cout << "Binary protocol-like payload generated\n";
     std::cout << "Default random payload generated\n";
     
+    // 9. Incremental Pattern Examples
+    std::cout << "\n=== Incremental Pattern Examples ===\n";
+    
+    // Basic incremental pattern
+    auto inc1 = random::incremental_pattern(16);  // 0, 1, 2, ..., 15
+    print_hex(inc1, "Basic incremental (16 bytes)");
+    
+    // Incremental pattern with custom start
+    auto inc2 = random::incremental_pattern(16, 240);  // 240, 241, ..., 255, 0, 1, ...
+    print_hex(inc2, "Incremental starting from 240");
+    
     std::cout << "\n=== Quick Examples Complete ===\n";
     
     return 0;

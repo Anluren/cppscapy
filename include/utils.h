@@ -242,6 +242,9 @@ namespace random {
     // Generate random payload simulating specific protocols
     std::vector<uint8_t> random_http_like(size_t size);
     std::vector<uint8_t> random_binary_protocol(size_t size);
+    
+    // Generate incremental pattern payload (0, 1, 2, ..., 255, 0, 1, ...)
+    std::vector<uint8_t> incremental_pattern(size_t size, uint8_t start_value = 0);
 } // namespace random
 
 } // namespace utils

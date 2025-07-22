@@ -577,6 +577,20 @@ std::vector<uint8_t> random_binary_protocol(size_t size) {
     return payload;
 }
 
+// Generate incremental pattern payload (0, 1, 2, ..., 255, 0, 1, ...)
+std::vector<uint8_t> incremental_pattern(size_t size, uint8_t start_value) {
+    std::vector<uint8_t> payload;
+    payload.reserve(size);
+    
+    uint8_t current_value = start_value;
+    for (size_t i = 0; i < size; ++i) {
+        payload.push_back(current_value);
+        current_value = (current_value + 1) % 256; // Wrap around after 255
+    }
+    
+    return payload;
+}
+
 } // namespace random
 
 } // namespace utils

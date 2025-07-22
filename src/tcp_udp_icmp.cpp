@@ -25,7 +25,7 @@ std::vector<uint8_t> TCPHeader::to_bytes() const {
     result.push_back((seq_num_ >> 8) & 0xFF);
     result.push_back(seq_num_ & 0xFF);
     
-    // Acknowledgment Number
+    // Ack
     result.push_back((ack_num_ >> 24) & 0xFF);
     result.push_back((ack_num_ >> 16) & 0xFF);
     result.push_back((ack_num_ >> 8) & 0xFF);

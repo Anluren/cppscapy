@@ -123,3 +123,10 @@ add_executable(quick_random_examples
 )
 
 target_link_libraries(quick_random_examples cppscapy)
+
+# Incremental pattern test
+add_executable(incremental_pattern_test
+    examples/incremental_pattern_test.cpp
+)
+
+target_link_libraries(incremental_pattern_test cppscapy)
