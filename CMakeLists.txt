@@ -130,3 +130,24 @@ add_executable(incremental_pattern_test
 )
 
 target_link_libraries(incremental_pattern_test cppscapy)
+
+# Move semantics test
+add_executable(move_semantics_test
+    examples/move_semantics_test.cpp
+)
+
+target_link_libraries(move_semantics_test cppscapy)
+
+# In-place randomization test
+add_executable(inplace_randomization_test
+    examples/inplace_randomization_test.cpp
+)
+
+target_link_libraries(inplace_randomization_test cppscapy)
+
+# Performance comparison test
+add_executable(performance_comparison
+    examples/performance_comparison.cpp
+)
+
+target_link_libraries(performance_comparison cppscapy)

@@ -245,6 +245,24 @@ namespace random {
     
     // Generate incremental pattern payload (0, 1, 2, ..., 255, 0, 1, ...)
     std::vector<uint8_t> incremental_pattern(size_t size, uint8_t start_value = 0);
+    
+    // In-place randomization functions for existing vectors
+    void randomize_bytes(std::vector<uint8_t>& data);
+    void randomize_bytes_range(std::vector<uint8_t>& data, uint8_t min_val = 0, uint8_t max_val = 255);
+    void randomize_ascii(std::vector<uint8_t>& data);
+    void randomize_alphanumeric(std::vector<uint8_t>& data);
+    void randomize_hex_chars(std::vector<uint8_t>& data);
+    void randomize_pattern(std::vector<uint8_t>& data, const std::vector<uint8_t>& pattern_chars);
+    void randomize_bytes_seeded(std::vector<uint8_t>& data, uint32_t seed);
+    void randomize_network_data(std::vector<uint8_t>& data);
+    void randomize_http_like(std::vector<uint8_t>& data);
+    void randomize_binary_protocol(std::vector<uint8_t>& data);
+    void fill_incremental_pattern(std::vector<uint8_t>& data, uint8_t start_value = 0);
+    
+    // Partial randomization functions (randomize only a portion of the vector)
+    void randomize_bytes_partial(std::vector<uint8_t>& data, size_t start_pos, size_t length);
+    void randomize_ascii_partial(std::vector<uint8_t>& data, size_t start_pos, size_t length);
+    void fill_incremental_pattern_partial(std::vector<uint8_t>& data, size_t start_pos, size_t length, uint8_t start_value = 0);
 } // namespace random
 
 } // namespace utils

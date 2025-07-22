@@ -132,6 +132,46 @@ int main() {
               << " bytes each in " << duration.count() << " microseconds\n";
     std::cout << "Average: " << duration.count() / iterations << " microseconds per payload\n";
     
+    // Test 13: In-place randomization APIs
+    std::cout << "\n=== In-Place Randomization APIs ===\n";
+    
+    // Demonstrate in-place vs allocation performance
+    std::vector<uint8_t> reusable_buffer(1024);
+    
+    // In-place randomization (no allocation)
+    auto inplace_start = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i < 100; ++i) {
+        random::randomize_bytes(reusable_buffer);
+    }
+    auto inplace_end = std::chrono::high_resolution_clock::now();
+    auto inplace_duration = std::chrono::duration_cast<std::chrono::microseconds>(inplace_end - inplace_start);
+    
+    std::cout << "In-place randomization (100x 1KB): " << inplace_duration.count() << " microseconds\n";
+    std::cout << "First 16 bytes of in-place result: ";
+    print_hex(std::vector<uint8_t>(reusable_buffer.begin(), reusable_buffer.begin() + 16), "");
+    
+    // Test different in-place patterns
+    random::randomize_ascii(reusable_buffer);
+    std::cout << "ASCII randomized (first 32 chars): ";
+    for (int i = 0; i < 32; ++i) {
+        char c = static_cast<char>(reusable_buffer[i]);
+        std::cout << (std::isprint(c) ? c : '.');
+    }
+    std::cout << "\n";
+    
+    random::fill_incremental_pattern(reusable_buffer, 200);
+    std::cout << "Incremental pattern (start=200, first 16): ";
+    print_hex(std::vector<uint8_t>(reusable_buffer.begin(), reusable_buffer.begin() + 16), "");
+    
+    // Partial randomization demo
+    std::vector<uint8_t> partial_demo(32, 0xAA);
+    random::randomize_bytes_partial(partial_demo, 8, 16);  // Randomize middle 16 bytes
+    std::cout << "Partial randomization (middle 16 bytes): ";
+    print_hex(partial_demo, "");
+    
+    std::cout << "\n✓ In-place APIs provide zero-allocation randomization\n";
+    std::cout << "✓ Perfect for buffer reuse and memory-constrained environments\n";
+    
     std::cout << "\n=== Random Payload Generation Test Complete ===\n";
     
     return 0;
