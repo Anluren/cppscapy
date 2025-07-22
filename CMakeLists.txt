@@ -109,3 +109,17 @@ add_executable(string_literal_test
 )
 
 target_link_libraries(string_literal_test cppscapy)
+
+# Random payload generation test
+add_executable(random_payload_test
+    examples/random_payload_test.cpp
+)
+
+target_link_libraries(random_payload_test cppscapy)
+
+# Quick random examples
+add_executable(quick_random_examples
+    examples/quick_random_examples.cpp
+)
+
+target_link_libraries(quick_random_examples cppscapy)

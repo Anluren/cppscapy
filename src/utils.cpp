@@ -359,5 +359,225 @@ std::vector<uint8_t> generate_dns_query(const std::string& domain) {
     return query;
 }
 
+// Random payload generation utilities
+namespace random {
+
+// Generate completely random payload
+std::vector<uint8_t> random_bytes(size_t size) {
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    static std::uniform_int_distribution<uint8_t> dis(0, 255);
+    
+    std::vector<uint8_t> payload(size);
+    std::generate(payload.begin(), payload.end(), []() { 
+        static std::random_device rd;
+        static std::mt19937 gen(rd());
+        static std::uniform_int_distribution<uint8_t> dis(0, 255);
+        return dis(gen); 
+    });
+    return payload;
+}
+
+// Generate random payload with specific byte range
+std::vector<uint8_t> random_bytes_range(size_t size, uint8_t min_val, uint8_t max_val) {
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    std::uniform_int_distribution<uint8_t> dis(min_val, max_val);
+    
+    std::vector<uint8_t> payload(size);
+    std::generate(payload.begin(), payload.end(), [&]() { return dis(gen); });
+    return payload;
+}
+
+// Generate random printable ASCII payload
+std::vector<uint8_t> random_ascii(size_t size) {
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    std::uniform_int_distribution<uint8_t> dis(32, 126); // Printable ASCII range
+    
+    std::vector<uint8_t> payload(size);
+    std::generate(payload.begin(), payload.end(), [&]() { return dis(gen); });
+    return payload;
+}
+
+// Generate random alphanumeric payload
+std::vector<uint8_t> random_alphanumeric(size_t size) {
+    static const std::string chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    std::uniform_int_distribution<size_t> dis(0, chars.size() - 1);
+    
+    std::vector<uint8_t> payload(size);
+    std::generate(payload.begin(), payload.end(), [&]() { 
+        return static_cast<uint8_t>(chars[dis(gen)]); 
+    });
+    return payload;
+}
+
+// Generate random hex-like payload (0-9, A-F)
+std::vector<uint8_t> random_hex_chars(size_t size) {
+    static const std::string hex_chars = "0123456789ABCDEF";
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    std::uniform_int_distribution<size_t> dis(0, hex_chars.size() - 1);
+    
+    std::vector<uint8_t> payload(size);
+    std::generate(payload.begin(), payload.end(), [&]() { 
+        return static_cast<uint8_t>(hex_chars[dis(gen)]); 
+    });
+    return payload;
+}
+
+// Generate random payload with specific pattern
+std::vector<uint8_t> random_pattern(size_t size, const std::vector<uint8_t>& pattern_chars) {
+    if (pattern_chars.empty()) {
+        return random_bytes(size);
+    }
+    
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    std::uniform_int_distribution<size_t> dis(0, pattern_chars.size() - 1);
+    
+    std::vector<uint8_t> payload(size);
+    std::generate(payload.begin(), payload.end(), [&]() { 
+        return pattern_chars[dis(gen)]; 
+    });
+    return payload;
+}
+
+// Generate random payload with seed (for reproducible results)
+std::vector<uint8_t> random_bytes_seeded(size_t size, uint32_t seed) {
+    std::mt19937 gen(seed);
+    std::uniform_int_distribution<uint8_t> dis(0, 255);
+    
+    std::vector<uint8_t> payload(size);
+    std::generate(payload.begin(), payload.end(), [&]() { return dis(gen); });
+    return payload;
+}
+
+// Generate random network-like payload (mix of binary and text)
+std::vector<uint8_t> random_network_data(size_t size) {
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    std::uniform_int_distribution<int> mode_dis(0, 2);
+    
+    std::vector<uint8_t> payload;
+    payload.reserve(size);
+    
+    while (payload.size() < size) {
+        int mode = mode_dis(gen);
+        size_t chunk_size = std::min(size - payload.size(), 
+                                   static_cast<size_t>(std::uniform_int_distribution<int>(4, 32)(gen)));
+        
+        std::vector<uint8_t> chunk;
+        if (mode == 0) {
+            // Binary data
+            chunk = random_bytes(chunk_size);
+        } else if (mode == 1) {
+            // ASCII text
+            chunk = random_ascii(chunk_size);
+        } else {
+            // Alphanumeric
+            chunk = random_alphanumeric(chunk_size);
+        }
+        
+        payload.insert(payload.end(), chunk.begin(), chunk.end());
+    }
+    
+    payload.resize(size);
+    return payload;
+}
+
+// Generate random payload with repeating pattern
+std::vector<uint8_t> random_repeating_pattern(size_t size, size_t pattern_length) {
+    if (pattern_length == 0) {
+        pattern_length = 1;
+    }
+    
+    auto pattern = random_bytes(pattern_length);
+    std::vector<uint8_t> payload;
+    payload.reserve(size);
+    
+    for (size_t i = 0; i < size; ++i) {
+        payload.push_back(pattern[i % pattern_length]);
+    }
+    
+    return payload;
+}
+
+// Generate random payload simulating HTTP-like data
+std::vector<uint8_t> random_http_like(size_t size) {
+    static const std::vector<std::string> http_words = {
+        "GET", "POST", "PUT", "DELETE", "HTTP", "Host:", "Content-Type:", 
+        "User-Agent:", "Accept:", "Connection:", "close", "keep-alive",
+        "application/json", "text/html", "Mozilla", "Chrome", "Firefox"
+    };
+    
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    std::uniform_int_distribution<size_t> word_dis(0, http_words.size() - 1);
+    std::uniform_int_distribution<int> space_dis(0, 3);
+    
+    std::vector<uint8_t> payload;
+    payload.reserve(size);
+    
+    while (payload.size() < size) {
+        const std::string& word = http_words[word_dis(gen)];
+        
+        for (char c : word) {
+            if (payload.size() >= size) break;
+            payload.push_back(static_cast<uint8_t>(c));
+        }
+        
+        if (payload.size() < size) {
+            char separator = (space_dis(gen) == 0) ? '\n' : 
+                           (space_dis(gen) == 1) ? '\r' : ' ';
+            payload.push_back(static_cast<uint8_t>(separator));
+        }
+    }
+    
+    payload.resize(size);
+    return payload;
+}
+
+// Generate random payload simulating binary protocol
+std::vector<uint8_t> random_binary_protocol(size_t size) {
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    std::uniform_int_distribution<uint8_t> byte_dis(0, 255);
+    std::uniform_int_distribution<int> structure_dis(0, 4);
+    
+    std::vector<uint8_t> payload;
+    payload.reserve(size);
+    
+    // Add some structure typical of binary protocols
+    while (payload.size() < size) {
+        int structure = structure_dis(gen);
+        
+        if (structure == 0 && payload.size() + 4 <= size) {
+            // 32-bit length field (big endian)
+            uint32_t len = byte_dis(gen) | (byte_dis(gen) << 8) | 
+                          (byte_dis(gen) << 16) | (byte_dis(gen) << 24);
+            payload.push_back((len >> 24) & 0xFF);
+            payload.push_back((len >> 16) & 0xFF);
+            payload.push_back((len >> 8) & 0xFF);
+            payload.push_back(len & 0xFF);
+        } else if (structure == 1 && payload.size() + 2 <= size) {
+            // 16-bit value (big endian)
+            uint16_t val = byte_dis(gen) | (byte_dis(gen) << 8);
+            payload.push_back((val >> 8) & 0xFF);
+            payload.push_back(val & 0xFF);
+        } else {
+            // Random byte
+            payload.push_back(byte_dis(gen));
+        }
+    }
+    
+    payload.resize(size);
+    return payload;
+}
+
+} // namespace random
+
 } // namespace utils
 } // namespace cppscapy

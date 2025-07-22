@@ -210,5 +210,39 @@ std::vector<uint8_t> generate_random_payload(size_t size);
 std::vector<uint8_t> generate_http_get_request(const std::string& host, const std::string& path = "/");
 std::vector<uint8_t> generate_dns_query(const std::string& domain);
 
+// Random payload generation utilities
+namespace random {
+    // Generate completely random payload
+    std::vector<uint8_t> random_bytes(size_t size);
+    
+    // Generate random payload with specific byte range
+    std::vector<uint8_t> random_bytes_range(size_t size, uint8_t min_val = 0, uint8_t max_val = 255);
+    
+    // Generate random printable ASCII payload
+    std::vector<uint8_t> random_ascii(size_t size);
+    
+    // Generate random alphanumeric payload  
+    std::vector<uint8_t> random_alphanumeric(size_t size);
+    
+    // Generate random hex-like payload (0-9, A-F)
+    std::vector<uint8_t> random_hex_chars(size_t size);
+    
+    // Generate random payload with specific pattern
+    std::vector<uint8_t> random_pattern(size_t size, const std::vector<uint8_t>& pattern_chars);
+    
+    // Generate random payload with seed (for reproducible results)
+    std::vector<uint8_t> random_bytes_seeded(size_t size, uint32_t seed);
+    
+    // Generate random network-like payload (mix of binary and text)
+    std::vector<uint8_t> random_network_data(size_t size);
+    
+    // Generate random payload with repeating pattern
+    std::vector<uint8_t> random_repeating_pattern(size_t size, size_t pattern_length);
+    
+    // Generate random payload simulating specific protocols
+    std::vector<uint8_t> random_http_like(size_t size);
+    std::vector<uint8_t> random_binary_protocol(size_t size);
+} // namespace random
+
 } // namespace utils
 } // namespace cppscapy
