@@ -7,6 +7,7 @@
 #include <type_traits>
 #include <vector>
 #include <array>
+#include <functional>
 
 using namespace cppscapy;
 using namespace cppscapy::utils;
@@ -276,6 +277,169 @@ int main() {
     validate_string(std::string("Not a literal"));
     const char* not_literal = "Not a literal either";
     validate_string(not_literal);
+    
+    // Test 6: Member Function Invocability Checking using std::is_invocable
+    std::cout << "\nTest 6: Member Function Invocability Checking\n";
+    
+    // Create a test class with various methods
+    class NetworkProcessor {
+    public:
+        void process_packet(const std::vector<uint8_t>& data) {
+            std::cout << "Processing " << data.size() << " byte packet\n";
+        }
+        
+        void set_header(const std::string& header_type, int value) {
+            std::cout << "Setting " << header_type << " header to " << value << "\n";
+        }
+        
+        int calculate_checksum(const std::vector<uint8_t>& data) {
+            return data.size() % 256;  // Simple checksum
+        }
+        
+        bool validate_address(const IPv4Address& addr) {
+            (void)addr;  // Suppress unused parameter warning
+            return true;  // Always valid for demo
+        }
+        
+        void log_message(const char* msg) {
+            std::cout << "Log: " << msg << "\n";
+        }
+        
+    private:
+        void internal_method(int x) { (void)x; }  // Private - not invocable from outside
+    };
+    
+    // Template to check if we can call a method with given arguments
+    auto check_method_invocable = [](auto method_ptr, auto&& obj, auto&&... args) {
+        using MethodType = decltype(method_ptr);
+        using ObjectType = std::decay_t<decltype(obj)>;
+        
+        constexpr bool is_callable = std::is_invocable_v<MethodType, ObjectType&, decltype(args)...>;
+        
+        std::cout << "Method invocable: " << std::boolalpha << is_callable;
+        
+        if constexpr (is_callable) {
+            using ReturnType = std::invoke_result_t<MethodType, ObjectType&, decltype(args)...>;
+            std::cout << " -> returns " << typeid(ReturnType).name();
+        }
+        std::cout << "\n";
+        
+        return is_callable;
+    };
+    
+    NetworkProcessor processor;
+    std::vector<uint8_t> test_data = {0x01, 0x02, 0x03, 0x04};
+    IPv4Address test_addr("192.168.1.1");
+    
+    std::cout << "Testing NetworkProcessor::process_packet:\n";
+    std::cout << "  With vector<uint8_t>: ";
+    check_method_invocable(&NetworkProcessor::process_packet, processor, test_data);
+    
+    std::cout << "  With string (invalid): ";
+    check_method_invocable(&NetworkProcessor::process_packet, processor, std::string("invalid"));
+    
+    std::cout << "\nTesting NetworkProcessor::set_header:\n";
+    std::cout << "  With (string, int): ";
+    check_method_invocable(&NetworkProcessor::set_header, processor, std::string("TCP"), 80);
+    
+    std::cout << "  With (const char*, int): ";
+    check_method_invocable(&NetworkProcessor::set_header, processor, "UDP", 53);
+    
+    std::cout << "  With (string, string) - invalid: ";
+    check_method_invocable(&NetworkProcessor::set_header, processor, std::string("ICMP"), std::string("invalid"));
+    
+    std::cout << "\nTesting NetworkProcessor::calculate_checksum:\n";
+    std::cout << "  With vector<uint8_t>: ";
+    check_method_invocable(&NetworkProcessor::calculate_checksum, processor, test_data);
+    
+    std::cout << "  With int (invalid): ";
+    check_method_invocable(&NetworkProcessor::calculate_checksum, processor, 42);
+    
+    std::cout << "\nTesting NetworkProcessor::validate_address:\n";
+    std::cout << "  With IPv4Address: ";
+    check_method_invocable(&NetworkProcessor::validate_address, processor, test_addr);
+    
+    std::cout << "  With string (invalid): ";
+    check_method_invocable(&NetworkProcessor::validate_address, processor, std::string("192.168.1.1"));
+    
+    std::cout << "\nTesting NetworkProcessor::log_message:\n";
+    std::cout << "  With const char*: ";
+    check_method_invocable(&NetworkProcessor::log_message, processor, "Test message");
+    
+    std::cout << "  With string literal: ";
+    check_method_invocable(&NetworkProcessor::log_message, processor, "Literal message");
+    
+    std::cout << "  With std::string: ";
+    check_method_invocable(&NetworkProcessor::log_message, processor, std::string("String object"));
+    
+    // Test with return type checking using std::is_invocable_r
+    auto check_method_with_return = [](auto expected_return_type, auto method_ptr, auto&& obj, auto&&... args) {
+        using MethodType = decltype(method_ptr);
+        using ObjectType = std::decay_t<decltype(obj)>;
+        using ExpectedReturn = decltype(expected_return_type);
+        
+        constexpr bool is_callable_with_return = std::is_invocable_r_v<ExpectedReturn, MethodType, ObjectType&, decltype(args)...>;
+        
+        std::cout << "Method returns expected type (" << typeid(ExpectedReturn).name() << "): " 
+                  << std::boolalpha << is_callable_with_return << "\n";
+        
+        return is_callable_with_return;
+    };
+    
+    std::cout << "\nTesting return type compatibility:\n";
+    std::cout << "  calculate_checksum returns int: ";
+    check_method_with_return(int{}, &NetworkProcessor::calculate_checksum, processor, test_data);
+    
+    std::cout << "  calculate_checksum returns double (convertible): ";
+    check_method_with_return(double{}, &NetworkProcessor::calculate_checksum, processor, test_data);
+    
+    std::cout << "  calculate_checksum returns string (invalid): ";
+    check_method_with_return(std::string{}, &NetworkProcessor::calculate_checksum, processor, test_data);
+    
+    std::cout << "  validate_address returns bool: ";
+    check_method_with_return(bool{}, &NetworkProcessor::validate_address, processor, test_addr);
+    
+    // Special check for void return type
+    auto check_void_return = [](auto method_ptr, auto&& obj, auto&&... args) {
+        using MethodType = decltype(method_ptr);
+        using ObjectType = std::decay_t<decltype(obj)>;
+        
+        constexpr bool returns_void = std::is_invocable_r_v<void, MethodType, ObjectType&, decltype(args)...>;
+        
+        std::cout << "Method returns void: " << std::boolalpha << returns_void << "\n";
+        return returns_void;
+    };
+    
+    std::cout << "  process_packet returns void: ";
+    check_void_return(&NetworkProcessor::process_packet, processor, test_data);
+    
+    std::cout << "  set_header returns void: ";
+    check_void_return(&NetworkProcessor::set_header, processor, std::string("TCP"), 80);
+    
+    // Test actual method calls using std::invoke when they're valid
+    std::cout << "\nActual method calls using std::invoke:\n";
+    
+    if constexpr (std::is_invocable_v<decltype(&NetworkProcessor::process_packet), NetworkProcessor&, std::vector<uint8_t>>) {
+        std::cout << "  Calling process_packet: ";
+        std::invoke(&NetworkProcessor::process_packet, processor, test_data);
+    }
+    
+    if constexpr (std::is_invocable_v<decltype(&NetworkProcessor::set_header), NetworkProcessor&, std::string, int>) {
+        std::cout << "  Calling set_header: ";
+        std::invoke(&NetworkProcessor::set_header, processor, std::string("HTTP"), 80);
+    }
+    
+    if constexpr (std::is_invocable_v<decltype(&NetworkProcessor::calculate_checksum), NetworkProcessor&, std::vector<uint8_t>>) {
+        std::cout << "  Calling calculate_checksum: ";
+        int checksum = std::invoke(&NetworkProcessor::calculate_checksum, processor, test_data);
+        std::cout << "Result: " << checksum << "\n";
+    }
+    
+    if constexpr (std::is_invocable_v<decltype(&NetworkProcessor::validate_address), NetworkProcessor&, IPv4Address>) {
+        std::cout << "  Calling validate_address: ";
+        bool valid = std::invoke(&NetworkProcessor::validate_address, processor, test_addr);
+        std::cout << "Result: " << std::boolalpha << valid << "\n";
+    }
     
     std::cout << "\n=== Templated Lambda Tests Complete ===\n";
     
