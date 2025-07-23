@@ -309,8 +309,20 @@ public:
     uint16_t src_port() const { return src_port_; }
     uint16_t dst_port() const { return dst_port_; }
     uint16_t length() const { return length_; }
+    uint16_t checksum() const { return checksum_; }
     
     std::vector<uint8_t> to_bytes() const;
+    
+    // Checksum calculation methods
+    uint16_t calculate_checksum(const IPv4Address& src_ip, const IPv4Address& dst_ip, 
+                               const std::vector<uint8_t>& payload = {}) const;
+    uint16_t calculate_checksum(const IPv6Address& src_ip, const IPv6Address& dst_ip, 
+                               const std::vector<uint8_t>& payload = {}) const;
+    
+    UDPHeader& update_checksum(const IPv4Address& src_ip, const IPv4Address& dst_ip, 
+                              const std::vector<uint8_t>& payload = {});
+    UDPHeader& update_checksum(const IPv6Address& src_ip, const IPv6Address& dst_ip, 
+                              const std::vector<uint8_t>& payload = {});
     
 private:
     uint16_t src_port_ = 0;
