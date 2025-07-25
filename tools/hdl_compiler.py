@@ -20,6 +20,8 @@ import re
 import sys
 import os
 from pathlib import Path
+import xml.etree.ElementTree as ET
+from xml.dom import minidom
 
 # Check Python version
 if sys.version_info < (3, 7):
@@ -223,10 +225,173 @@ class HDLParser:
         return type_widths.get(enum_def.underlying_type, 16)
 
 
-class CPPCodeGenerator:
-    """Generate C++ code from parsed HDL"""
+class XMLParser:
+    """Parser for XML-based Network Protocol Definition"""
     
-    def __init__(self, parser: HDLParser, namespace: str = "cppscapy::dsl"):
+    def __init__(self):
+        self.enums: Dict[str, EnumDef] = {}
+        self.headers: Dict[str, HeaderDef] = {}
+    
+    def parse_file(self, filename: str) -> None:
+        """Parse an XML file"""
+        try:
+            tree = ET.parse(filename)
+            root = tree.getroot()
+            self.parse_xml_content(root)
+        except ET.ParseError as e:
+            raise ValueError(f"XML parsing error: {e}")
+        except Exception as e:
+            raise ValueError(f"Error reading XML file: {e}")
+    
+    def parse_xml_content(self, root: ET.Element) -> None:
+        """Parse XML content from root element"""
+        # Parse enums
+        for enum_elem in root.findall('enum'):
+            enum_def = self._parse_xml_enum(enum_elem)
+            self.enums[enum_def.name] = enum_def
+        
+        # Parse headers
+        for header_elem in root.findall('header'):
+            header_def = self._parse_xml_header(header_elem)
+            self.headers[header_def.name] = header_def
+    
+    def _parse_xml_enum(self, enum_elem: ET.Element) -> EnumDef:
+        """Parse enum from XML element"""
+        name = enum_elem.get('name', '')
+        underlying_type = enum_elem.get('underlying_type', 'uint16_t')
+        
+        values = []
+        for value_elem in enum_elem.findall('value'):
+            value_name = value_elem.get('name', '')
+            value_str = value_elem.get('value', '0')
+            
+            # Parse value
+            try:
+                if value_str.startswith('0x'):
+                    value = int(value_str, 16)
+                else:
+                    value = int(value_str)
+            except ValueError:
+                value = value_str
+            
+            values.append(EnumValue(value_name, value))
+        
+        return EnumDef(name, underlying_type, values)
+    
+    def _parse_xml_header(self, header_elem: ET.Element) -> HeaderDef:
+        """Parse header from XML element"""
+        name = header_elem.get('name', '')
+        
+        # Parse attributes (if any are defined at header level)
+        attributes = []
+        
+        fields = []
+        for field_elem in header_elem.findall('field'):
+            field = self._parse_xml_field(field_elem)
+            if field:
+                fields.append(field)
+        
+        return HeaderDef(name, fields, attributes)
+    
+    def _parse_xml_field(self, field_elem: ET.Element) -> Optional[Field]:
+        """Parse field from XML element"""
+        field_name = field_elem.get('name', '')
+        bit_width_str = field_elem.get('bit_width', '0')
+        field_type_str = field_elem.get('type', 'integer')
+        enum_type = field_elem.get('enum_type')
+        default_str = field_elem.get('default')
+        
+        # Parse bit width
+        try:
+            bit_width = int(bit_width_str)
+        except ValueError:
+            bit_width = bit_width_str  # Keep as expression
+        
+        # Parse default value
+        default_value = None
+        if default_str:
+            try:
+                if default_str.startswith('0x'):
+                    default_value = int(default_str, 16)
+                else:
+                    default_value = int(default_str)
+            except ValueError:
+                default_value = default_str
+        
+        # Parse attributes
+        attributes = []
+        attr_elem = field_elem.find('attributes')
+        if attr_elem is not None:
+            for attr in attr_elem.findall('attribute'):
+                if attr.text:
+                    attributes.append(attr.text.strip())
+        
+        # Determine field type
+        field_type = FieldType.INTEGER
+        if field_type_str == 'enum':
+            field_type = FieldType.ENUM
+            if enum_type and enum_type in self.enums:
+                bit_width = self._get_enum_bit_width(enum_type)
+        elif field_type_str == 'array':
+            field_type = FieldType.ARRAY
+        elif field_type_str == 'union':
+            field_type = FieldType.UNION
+        elif field_type_str == 'variable':
+            field_type = FieldType.VARIABLE
+        
+        return Field(
+            name=field_name,
+            bit_width=bit_width,
+            field_type=field_type,
+            default_value=default_value,
+            attributes=attributes,
+            enum_type=enum_type
+        )
+    
+    def _get_enum_bit_width(self, enum_name: str) -> int:
+        """Get bit width for enum based on underlying type"""
+        enum_def = self.enums[enum_name]
+        type_widths = {
+            'uint8_t': 8, 'uint16_t': 16, 'uint32_t': 32, 'uint64_t': 64,
+            '8': 8, '16': 16, '32': 32, '64': 64
+        }
+        return type_widths.get(enum_def.underlying_type, 16)
+
+
+class UniversalParser:
+    """Universal parser that can handle both HDL and XML formats"""
+    
+    def __init__(self):
+        self.enums: Dict[str, EnumDef] = {}
+        self.headers: Dict[str, HeaderDef] = {}
+    
+    def parse_file(self, filename: str) -> None:
+        """Parse a file, auto-detecting format based on extension"""
+        file_ext = Path(filename).suffix.lower()
+        
+        if file_ext == '.xml':
+            parser = XMLParser()
+        elif file_ext == '.hdl':
+            parser = HDLParser()
+        else:
+            # Try to detect format by content
+            with open(filename, 'r') as f:
+                content = f.read(1024)  # Read first 1KB
+            
+            if content.strip().startswith('<?xml') or '<network_protocols' in content:
+                parser = XMLParser()
+            else:
+                parser = HDLParser()
+        
+        parser.parse_file(filename)
+        self.enums = parser.enums
+        self.headers = parser.headers
+
+
+class CPPCodeGenerator:
+    """Generate C++ code from parsed HDL or XML"""
+    
+    def __init__(self, parser: Union[HDLParser, XMLParser, UniversalParser], namespace: str = "cppscapy::dsl"):
         self.parser = parser
         self.namespace = namespace
         self.output = []
@@ -529,7 +694,7 @@ def is_valid_filename(filename: str) -> bool:
 
 
 def validate_input_file(filename: str) -> str:
-    """Validate input HDL file"""
+    """Validate input HDL or XML file"""
     if not filename:
         raise argparse.ArgumentTypeError("Input file cannot be empty")
     
@@ -546,9 +711,9 @@ def validate_input_file(filename: str) -> str:
         )
     
     # Check file extension
-    if not filename.lower().endswith(('.hdl', '.HDL')):
+    if not filename.lower().endswith(('.hdl', '.HDL', '.xml', '.XML')):
         raise argparse.ArgumentTypeError(
-            f"Input file '{filename}' must have .hdl extension"
+            f"Input file '{filename}' must have .hdl or .xml extension"
         )
     
     # Check if file exists
@@ -655,11 +820,11 @@ def main():
         epilog="""
 Examples:
     hdl_compiler.py protocols.hdl -o generated_headers.h
-    hdl_compiler.py network_definitions.hdl --output include/network.h
-    hdl_compiler.py --namespace my::protocols input.hdl -o output.h
+    hdl_compiler.py network_definitions.xml --output include/network.h
+    hdl_compiler.py --namespace my::protocols input.xml -o output.h
 
 Constraints:
-    - Input file must have .hdl extension and exist
+    - Input file must have .hdl or .xml extension and exist
     - Output file must have C++ header extension (.h, .hpp, .hxx)
     - Namespace must be valid C++ identifier(s) separated by ::
     - Filenames can only contain alphanumeric, dots, underscores, hyphens, and path separators
@@ -669,7 +834,7 @@ Constraints:
     parser.add_argument(
         "input_file",
         type=validate_input_file,
-        help="Input HDL file to compile (must have .hdl extension)"
+        help="Input HDL or XML file to compile (must have .hdl or .xml extension)"
     )
     
     parser.add_argument(
@@ -716,27 +881,27 @@ Constraints:
             parser.error(f"Auto-generated output filename invalid: {e}")
     
     try:
-        # Parse HDL file
+        # Parse HDL/XML file
         if args.verbose:
             print(f"Parsing {args.input_file}...")
             print(f"Output namespace: {args.namespace}")
             print(f"Output file: {output_file}")
         
-        hdl_parser = HDLParser()
-        hdl_parser.parse_file(args.input_file)
+        parser = UniversalParser()
+        parser.parse_file(args.input_file)
         
         if args.verbose:
-            print(f"Found {len(hdl_parser.enums)} enums and {len(hdl_parser.headers)} headers")
+            print(f"Found {len(parser.enums)} enums and {len(parser.headers)} headers")
         
         # Validate that we found some content
-        if not hdl_parser.enums and not hdl_parser.headers:
+        if not parser.enums and not parser.headers:
             print("Warning: No enums or headers found in input file", file=sys.stderr)
         
         # Generate C++ code
         if args.verbose:
             print(f"Generating C++ code...")
         
-        generator = CPPCodeGenerator(hdl_parser, args.namespace)
+        generator = CPPCodeGenerator(parser, args.namespace)
         cpp_code = generator.generate()
         
         # Write output file with error handling

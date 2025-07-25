@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+    <!-- Root element -->
+    <xs:element name="network_protocols">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:choice minOccurs="0" maxOccurs="unbounded">
+                    <xs:element ref="enum"/>
+                    <xs:element ref="header"/>
+                </xs:choice>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Enum definition -->
+    <xs:element name="enum">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="value" minOccurs="1" maxOccurs="unbounded"/>
+            </xs:sequence>
+            <xs:attribute name="name" type="xs:string" use="required"/>
+            <xs:attribute name="underlying_type" use="required">
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:enumeration value="uint8_t"/>
+                        <xs:enumeration value="uint16_t"/>
+                        <xs:enumeration value="uint32_t"/>
+                        <xs:enumeration value="uint64_t"/>
+                        <xs:enumeration value="8"/>
+                        <xs:enumeration value="16"/>
+                        <xs:enumeration value="32"/>
+                        <xs:enumeration value="64"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:attribute>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Enum value -->
+    <xs:element name="value">
+        <xs:complexType>
+            <xs:attribute name="name" type="xs:string" use="required"/>
+            <xs:attribute name="value" type="xs:string" use="required"/>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Header definition -->
+    <xs:element name="header">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="field" minOccurs="1" maxOccurs="unbounded"/>
+            </xs:sequence>
+            <xs:attribute name="name" type="xs:string" use="required"/>
+            <xs:attribute name="description" type="xs:string" use="optional"/>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Field definition -->
+    <xs:element name="field">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="attributes" minOccurs="0">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="attribute" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+            <xs:attribute name="name" type="xs:string" use="required"/>
+            <xs:attribute name="bit_width" type="xs:positiveInteger" use="required"/>
+            <xs:attribute name="type" use="required">
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:enumeration value="integer"/>
+                        <xs:enumeration value="enum"/>
+                        <xs:enumeration value="array"/>
+                        <xs:enumeration value="union"/>
+                        <xs:enumeration value="variable"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:attribute>
+            <xs:attribute name="enum_type" type="xs:string" use="optional"/>
+            <xs:attribute name="default" type="xs:string" use="optional"/>
+            <xs:attribute name="condition" type="xs:string" use="optional"/>
+            <xs:attribute name="description" type="xs:string" use="optional"/>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>

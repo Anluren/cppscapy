@@ -1,11 +1,13 @@
 # CppScapy - Network Header Construction Library
 
-A convenient C++ library for constructing standard network headers (MAC, IPv4, IPv6, TCP, UDP, ICMP, etc.) with a clean, fluent API and comprehensive Header Definition Language (HDL) compiler.
+A convenient C++ library for constructing standard network headers (MAC, IPv4, IPv6, TCP, UDP, ICMP, etc.) with a clean, fluent API and comprehensive Header Definition Language (HDL) compiler supporting both HDL and XML formats.
 
 ## Features
 
-- **Header Definition Language (HDL)**: Declarative syntax for defining network protocol headers
-- **HDL Compiler**: Generates type-safe C++ classes from HDL definitions
+- **Dual Format Support**: Both HDL and XML formats for defining network protocol headers
+- **HDL Compiler**: Generates type-safe C++ classes from HDL or XML definitions
+- **XML Schema Validation**: XSD schema support for XML protocol definitions
+- **Format Converter**: Convert between HDL and XML formats seamlessly
 - **25+ Protocol Headers**: Comprehensive protocol support including IPv4/IPv6, TCP/UDP, DHCP, DNS, VPN protocols
 - **MAC Address Support**: Parse, create, and manipulate MAC addresses
 - **IPv4/IPv6 Address Support**: Handle IP addresses with various input formats
@@ -15,12 +17,15 @@ A convenient C++ library for constructing standard network headers (MAC, IPv4, I
 - **Header Validation**: Automatic checksum calculation and validation
 - **Type Safety**: Compile-time type checking and enum validation
 - **Bit-Field Manipulation**: Precise control over protocol field layouts
+- **Rich Documentation**: Embedded documentation support in XML format
+- **VS Code Integration**: Complete debugging and development environment setup
 
 ## Requirements
 
 ### For HDL Compiler
 - **Python 3.7+** (Python 3.8+ recommended)
 - Standard library only (no external dependencies)
+- Optional: `xmllint` for XML schema validation
 
 ### For C++ Library
 - **C++17** compatible compiler (GCC 7+, Clang 5+, MSVC 2017+)
@@ -37,6 +42,29 @@ cmake ..
 make
 ```
 
+### HDL/XML Compilation
+
+```bash
+# Compile XML format (new)
+python3 tools/hdl_compiler.py examples/network_protocols.xml -o generated_headers.h
+
+# Compile HDL format (original)
+python3 tools/hdl_compiler.py examples/network_protocols.hdl -o generated_headers.h
+
+# Auto-detect format
+python3 tools/hdl_compiler.py protocols.xml -o output.h --verbose
+```
+
+### Format Conversion
+
+```bash
+# Convert HDL to XML
+python3 tools/format_converter.py input.hdl -o output.xml
+
+# Convert XML to HDL  
+python3 tools/format_converter.py input.xml -o output.hdl
+```
+
 ### Running Examples
 
 ```bash
@@ -45,6 +73,43 @@ make
 
 # Run unit tests
 ./simple_test
+```
+
+## Format Comparison
+
+### HDL Format (Concise)
+```hdl
+enum EtherType : uint16_t {
+    IPv4 = 0x0800,
+    IPv6 = 0x86DD
+}
+
+header EthernetHeader {
+    dst_mac: 48;
+    src_mac: 48;
+    ethertype: EtherType;
+}
+```
+
+### XML Format (Rich Metadata)
+```xml
+<enum name="EtherType" underlying_type="uint16_t">
+    <value name="IPv4" value="0x0800"/>
+    <value name="IPv6" value="0x86DD"/>
+</enum>
+
+<header name="EthernetHeader">
+    <description>Standard Ethernet frame header</description>
+    <field name="dst_mac" bit_width="48" type="integer">
+        <description>Destination MAC address</description>
+    </field>
+    <field name="src_mac" bit_width="48" type="integer">
+        <description>Source MAC address</description>
+    </field>
+    <field name="ethertype" bit_width="16" type="enum" enum_type="EtherType">
+        <description>EtherType field</description>
+    </field>
+</header>
 ```
 
 ## New Features
