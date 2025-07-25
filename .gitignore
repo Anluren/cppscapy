@@ -2,6 +2,9 @@
 build/
 cmake-build-*/
 
+# Cache directories
+.cache/
+
 # Compiled Object files
 *.slo
 *.lo

@@ -85,9 +85,34 @@ enum class EtherType : uint16_t {
 // Generated enum: IPProtocol
 enum class IPProtocol : uint8_t {
     ICMP = 1,
+    IGMP = 2,
     TCP = 6,
     UDP = 17,
+    GRE = 47,
+    ESP = 50,
+    AH = 51,
+    ICMPv6 = 58,
     OSPF = 89,
+    SCTP = 132,
+};
+
+// Generated enum: ICMPType
+enum class ICMPType : uint8_t {
+    ECHO_REPLY = 0,
+    DEST_UNREACHABLE = 3,
+    SOURCE_QUENCH = 4,
+    REDIRECT = 5,
+    ECHO_REQUEST = 8,
+    TIME_EXCEEDED = 11,
+    PARAMETER_PROBLEM = 12,
+    TIMESTAMP_REQUEST = 13,
+    TIMESTAMP_REPLY = 14,
+};
+
+// Generated enum: DHCPMessageType
+enum class DHCPMessageType : uint8_t {
+    BOOTREQUEST = 1,
+    BOOTREPLY = 2,
 };
 
 // Generated from DSL: header EthernetHeader
@@ -514,11 +539,11 @@ public:
     ICMPHeader() : data_(8, 0) {}
     
     // type field (8 bits)
-    uint8_t type() const {
-        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 0, 8).get();
+    ICMPType type() const {
+        return static_cast<ICMPType>(BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 0, 8).get());
     }
-    void set_type(uint8_t value) {
-        BitField<uint8_t>(data_, 0, 8).set(value);
+    void set_type(ICMPType value) {
+        BitField<uint8_t>(data_, 0, 8).set(static_cast<uint8_t>(value));
     }
     
     // code field (8 bits)
@@ -569,6 +594,1694 @@ public:
     void update_computed_fields() override {
         // Update checksum field
         // TODO: Implement checksum calculation
+    }
+    
+private:
+    std::vector<uint8_t> data_;
+};
+
+// Generated from DSL: header IPv6Header
+class IPv6Header : public HeaderBase {
+public:
+    IPv6Header() : data_(40, 0) {}
+    
+    // version field (4 bits)
+    uint8_t version() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 0, 4).get();
+    }
+    void set_version(uint8_t value) {
+        BitField<uint8_t>(data_, 0, 4).set(value);
+    }
+    
+    // traffic_class field (8 bits)
+    uint8_t traffic_class() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 4, 8).get();
+    }
+    void set_traffic_class(uint8_t value) {
+        BitField<uint8_t>(data_, 4, 8).set(value);
+    }
+    
+    // flow_label field (20 bits)
+    uint32_t flow_label() const {
+        return BitField<uint32_t>(const_cast<std::vector<uint8_t>&>(data_), 12, 20).get();
+    }
+    void set_flow_label(uint32_t value) {
+        BitField<uint32_t>(data_, 12, 20).set(value);
+    }
+    
+    // payload_length field (16 bits)
+    uint16_t payload_length() const {
+        return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 32, 16).get();
+    }
+    void set_payload_length(uint16_t value) {
+        BitField<uint16_t>(data_, 32, 16).set(value);
+    }
+    
+    // next_header field (8 bits)
+    IPProtocol next_header() const {
+        return static_cast<IPProtocol>(BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 48, 8).get());
+    }
+    void set_next_header(IPProtocol value) {
+        BitField<uint8_t>(data_, 48, 8).set(static_cast<uint8_t>(value));
+    }
+    
+    // hop_limit field (8 bits)
+    uint8_t hop_limit() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 56, 8).get();
+    }
+    void set_hop_limit(uint8_t value) {
+        BitField<uint8_t>(data_, 56, 8).set(value);
+    }
+    
+    // src_addr field (128 bits)
+    uint64_t src_addr() const {
+        return BitField<uint64_t>(const_cast<std::vector<uint8_t>&>(data_), 64, 128).get();
+    }
+    void set_src_addr(uint64_t value) {
+        BitField<uint64_t>(data_, 64, 128).set(value);
+    }
+    
+    // dst_addr field (128 bits)
+    uint64_t dst_addr() const {
+        return BitField<uint64_t>(const_cast<std::vector<uint8_t>&>(data_), 192, 128).get();
+    }
+    void set_dst_addr(uint64_t value) {
+        BitField<uint64_t>(data_, 192, 128).set(value);
+    }
+    
+    // HeaderBase implementation
+    std::vector<uint8_t> to_bytes() const override { return data_; }
+    
+    bool from_bytes(const std::vector<uint8_t>& data) override {
+        if (data.size() < 40) return false;
+        data_ = data;
+        data_.resize(40);
+        return true;
+    }
+    
+    size_t size_bits() const override { return 320; }
+    bool is_valid() const override { return data_.size() == 40; }
+    
+    void update_computed_fields() override {
+    }
+    
+private:
+    std::vector<uint8_t> data_;
+};
+
+// Generated from DSL: header ARPHeader
+class ARPHeader : public HeaderBase {
+public:
+    ARPHeader() : data_(28, 0) {}
+    
+    // hardware_type field (16 bits)
+    uint16_t hardware_type() const {
+        return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 0, 16).get();
+    }
+    void set_hardware_type(uint16_t value) {
+        BitField<uint16_t>(data_, 0, 16).set(value);
+    }
+    
+    // protocol_type field (16 bits)
+    uint16_t protocol_type() const {
+        return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 16, 16).get();
+    }
+    void set_protocol_type(uint16_t value) {
+        BitField<uint16_t>(data_, 16, 16).set(value);
+    }
+    
+    // hardware_addr_len field (8 bits)
+    uint8_t hardware_addr_len() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 32, 8).get();
+    }
+    void set_hardware_addr_len(uint8_t value) {
+        BitField<uint8_t>(data_, 32, 8).set(value);
+    }
+    
+    // protocol_addr_len field (8 bits)
+    uint8_t protocol_addr_len() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 40, 8).get();
+    }
+    void set_protocol_addr_len(uint8_t value) {
+        BitField<uint8_t>(data_, 40, 8).set(value);
+    }
+    
+    // operation field (16 bits)
+    uint16_t operation() const {
+        return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 48, 16).get();
+    }
+    void set_operation(uint16_t value) {
+        BitField<uint16_t>(data_, 48, 16).set(value);
+    }
+    
+    // sender_hw_addr field (48 bits)
+    uint64_t sender_hw_addr() const {
+        return BitField<uint64_t>(const_cast<std::vector<uint8_t>&>(data_), 64, 48).get();
+    }
+    void set_sender_hw_addr(uint64_t value) {
+        BitField<uint64_t>(data_, 64, 48).set(value);
+    }
+    
+    // sender_proto_addr field (32 bits)
+    uint32_t sender_proto_addr() const {
+        return BitField<uint32_t>(const_cast<std::vector<uint8_t>&>(data_), 112, 32).get();
+    }
+    void set_sender_proto_addr(uint32_t value) {
+        BitField<uint32_t>(data_, 112, 32).set(value);
+    }
+    
+    // target_hw_addr field (48 bits)
+    uint64_t target_hw_addr() const {
+        return BitField<uint64_t>(const_cast<std::vector<uint8_t>&>(data_), 144, 48).get();
+    }
+    void set_target_hw_addr(uint64_t value) {
+        BitField<uint64_t>(data_, 144, 48).set(value);
+    }
+    
+    // target_proto_addr field (32 bits)
+    uint32_t target_proto_addr() const {
+        return BitField<uint32_t>(const_cast<std::vector<uint8_t>&>(data_), 192, 32).get();
+    }
+    void set_target_proto_addr(uint32_t value) {
+        BitField<uint32_t>(data_, 192, 32).set(value);
+    }
+    
+    // HeaderBase implementation
+    std::vector<uint8_t> to_bytes() const override { return data_; }
+    
+    bool from_bytes(const std::vector<uint8_t>& data) override {
+        if (data.size() < 28) return false;
+        data_ = data;
+        data_.resize(28);
+        return true;
+    }
+    
+    size_t size_bits() const override { return 224; }
+    bool is_valid() const override { return data_.size() == 28; }
+    
+    void update_computed_fields() override {
+    }
+    
+private:
+    std::vector<uint8_t> data_;
+};
+
+// Generated from DSL: header DNSHeader
+class DNSHeader : public HeaderBase {
+public:
+    DNSHeader() : data_(4, 0) {}
+    
+    // id field (16 bits)
+    uint16_t id() const {
+        return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 0, 16).get();
+    }
+    void set_id(uint16_t value) {
+        BitField<uint16_t>(data_, 0, 16).set(value);
+    }
+    
+    // opcode field (4 bits)
+    uint8_t opcode() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 16, 4).get();
+    }
+    void set_opcode(uint8_t value) {
+        BitField<uint8_t>(data_, 16, 4).set(value);
+    }
+    
+    // aa field (1 bits)
+    uint8_t aa() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 20, 1).get();
+    }
+    void set_aa(uint8_t value) {
+        BitField<uint8_t>(data_, 20, 1).set(value);
+    }
+    
+    // tc field (1 bits)
+    uint8_t tc() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 21, 1).get();
+    }
+    void set_tc(uint8_t value) {
+        BitField<uint8_t>(data_, 21, 1).set(value);
+    }
+    
+    // rd field (1 bits)
+    uint8_t rd() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 22, 1).get();
+    }
+    void set_rd(uint8_t value) {
+        BitField<uint8_t>(data_, 22, 1).set(value);
+    }
+    
+    // ra field (1 bits)
+    uint8_t ra() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 23, 1).get();
+    }
+    void set_ra(uint8_t value) {
+        BitField<uint8_t>(data_, 23, 1).set(value);
+    }
+    
+    // z field (3 bits)
+    uint8_t z() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 24, 3).get();
+    }
+    void set_z(uint8_t value) {
+        BitField<uint8_t>(data_, 24, 3).set(value);
+    }
+    
+    // rcode field (4 bits)
+    uint8_t rcode() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 27, 4).get();
+    }
+    void set_rcode(uint8_t value) {
+        BitField<uint8_t>(data_, 27, 4).set(value);
+    }
+    
+    // HeaderBase implementation
+    std::vector<uint8_t> to_bytes() const override { return data_; }
+    
+    bool from_bytes(const std::vector<uint8_t>& data) override {
+        if (data.size() < 4) return false;
+        data_ = data;
+        data_.resize(4);
+        return true;
+    }
+    
+    size_t size_bits() const override { return 31; }
+    bool is_valid() const override { return data_.size() == 4; }
+    
+    void update_computed_fields() override {
+    }
+    
+private:
+    std::vector<uint8_t> data_;
+};
+
+// Generated from DSL: header DHCPHeader
+class DHCPHeader : public HeaderBase {
+public:
+    DHCPHeader() : data_(240, 0) {}
+    
+    // op field (8 bits)
+    DHCPMessageType op() const {
+        return static_cast<DHCPMessageType>(BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 0, 8).get());
+    }
+    void set_op(DHCPMessageType value) {
+        BitField<uint8_t>(data_, 0, 8).set(static_cast<uint8_t>(value));
+    }
+    
+    // htype field (8 bits)
+    uint8_t htype() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 8, 8).get();
+    }
+    void set_htype(uint8_t value) {
+        BitField<uint8_t>(data_, 8, 8).set(value);
+    }
+    
+    // hlen field (8 bits)
+    uint8_t hlen() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 16, 8).get();
+    }
+    void set_hlen(uint8_t value) {
+        BitField<uint8_t>(data_, 16, 8).set(value);
+    }
+    
+    // hops field (8 bits)
+    uint8_t hops() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 24, 8).get();
+    }
+    void set_hops(uint8_t value) {
+        BitField<uint8_t>(data_, 24, 8).set(value);
+    }
+    
+    // xid field (32 bits)
+    uint32_t xid() const {
+        return BitField<uint32_t>(const_cast<std::vector<uint8_t>&>(data_), 32, 32).get();
+    }
+    void set_xid(uint32_t value) {
+        BitField<uint32_t>(data_, 32, 32).set(value);
+    }
+    
+    // secs field (16 bits)
+    uint16_t secs() const {
+        return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 64, 16).get();
+    }
+    void set_secs(uint16_t value) {
+        BitField<uint16_t>(data_, 64, 16).set(value);
+    }
+    
+    // flags field (16 bits)
+    uint16_t flags() const {
+        return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 80, 16).get();
+    }
+    void set_flags(uint16_t value) {
+        BitField<uint16_t>(data_, 80, 16).set(value);
+    }
+    
+    // ciaddr field (32 bits)
+    uint32_t ciaddr() const {
+        return BitField<uint32_t>(const_cast<std::vector<uint8_t>&>(data_), 96, 32).get();
+    }
+    void set_ciaddr(uint32_t value) {
+        BitField<uint32_t>(data_, 96, 32).set(value);
+    }
+    
+    // yiaddr field (32 bits)
+    uint32_t yiaddr() const {
+        return BitField<uint32_t>(const_cast<std::vector<uint8_t>&>(data_), 128, 32).get();
+    }
+    void set_yiaddr(uint32_t value) {
+        BitField<uint32_t>(data_, 128, 32).set(value);
+    }
+    
+    // siaddr field (32 bits)
+    uint32_t siaddr() const {
+        return BitField<uint32_t>(const_cast<std::vector<uint8_t>&>(data_), 160, 32).get();
+    }
+    void set_siaddr(uint32_t value) {
+        BitField<uint32_t>(data_, 160, 32).set(value);
+    }
+    
+    // giaddr field (32 bits)
+    uint32_t giaddr() const {
+        return BitField<uint32_t>(const_cast<std::vector<uint8_t>&>(data_), 192, 32).get();
+    }
+    void set_giaddr(uint32_t value) {
+        BitField<uint32_t>(data_, 192, 32).set(value);
+    }
+    
+    // chaddr field (128 bits)
+    uint64_t chaddr() const {
+        return BitField<uint64_t>(const_cast<std::vector<uint8_t>&>(data_), 224, 128).get();
+    }
+    void set_chaddr(uint64_t value) {
+        BitField<uint64_t>(data_, 224, 128).set(value);
+    }
+    
+    // sname field (512 bits)
+    uint64_t sname() const {
+        return BitField<uint64_t>(const_cast<std::vector<uint8_t>&>(data_), 352, 512).get();
+    }
+    void set_sname(uint64_t value) {
+        BitField<uint64_t>(data_, 352, 512).set(value);
+    }
+    
+    // file field (1024 bits)
+    uint64_t file() const {
+        return BitField<uint64_t>(const_cast<std::vector<uint8_t>&>(data_), 864, 1024).get();
+    }
+    void set_file(uint64_t value) {
+        BitField<uint64_t>(data_, 864, 1024).set(value);
+    }
+    
+    // magic_cookie field (32 bits)
+    uint32_t magic_cookie() const {
+        return BitField<uint32_t>(const_cast<std::vector<uint8_t>&>(data_), 1888, 32).get();
+    }
+    void set_magic_cookie(uint32_t value) {
+        BitField<uint32_t>(data_, 1888, 32).set(value);
+    }
+    
+    // HeaderBase implementation
+    std::vector<uint8_t> to_bytes() const override { return data_; }
+    
+    bool from_bytes(const std::vector<uint8_t>& data) override {
+        if (data.size() < 240) return false;
+        data_ = data;
+        data_.resize(240);
+        return true;
+    }
+    
+    size_t size_bits() const override { return 1920; }
+    bool is_valid() const override { return data_.size() == 240; }
+    
+    void update_computed_fields() override {
+    }
+    
+private:
+    std::vector<uint8_t> data_;
+};
+
+// Generated from DSL: header GREHeader
+class GREHeader : public HeaderBase {
+public:
+    GREHeader() : data_(4, 0) {}
+    
+    // checksum_present field (1 bits)
+    uint8_t checksum_present() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 0, 1).get();
+    }
+    void set_checksum_present(uint8_t value) {
+        BitField<uint8_t>(data_, 0, 1).set(value);
+    }
+    
+    // routing_present field (1 bits)
+    uint8_t routing_present() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 1, 1).get();
+    }
+    void set_routing_present(uint8_t value) {
+        BitField<uint8_t>(data_, 1, 1).set(value);
+    }
+    
+    // key_present field (1 bits)
+    uint8_t key_present() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 2, 1).get();
+    }
+    void set_key_present(uint8_t value) {
+        BitField<uint8_t>(data_, 2, 1).set(value);
+    }
+    
+    // sequence_present field (1 bits)
+    uint8_t sequence_present() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 3, 1).get();
+    }
+    void set_sequence_present(uint8_t value) {
+        BitField<uint8_t>(data_, 3, 1).set(value);
+    }
+    
+    // strict_source_route field (1 bits)
+    uint8_t strict_source_route() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 4, 1).get();
+    }
+    void set_strict_source_route(uint8_t value) {
+        BitField<uint8_t>(data_, 4, 1).set(value);
+    }
+    
+    // recursion_control field (3 bits)
+    uint8_t recursion_control() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 5, 3).get();
+    }
+    void set_recursion_control(uint8_t value) {
+        BitField<uint8_t>(data_, 5, 3).set(value);
+    }
+    
+    // ack_present field (1 bits)
+    uint8_t ack_present() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 8, 1).get();
+    }
+    void set_ack_present(uint8_t value) {
+        BitField<uint8_t>(data_, 8, 1).set(value);
+    }
+    
+    // flags field (4 bits)
+    uint8_t flags() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 9, 4).get();
+    }
+    void set_flags(uint8_t value) {
+        BitField<uint8_t>(data_, 9, 4).set(value);
+    }
+    
+    // version field (3 bits)
+    uint8_t version() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 13, 3).get();
+    }
+    void set_version(uint8_t value) {
+        BitField<uint8_t>(data_, 13, 3).set(value);
+    }
+    
+    // protocol_type field (16 bits)
+    uint16_t protocol_type() const {
+        return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 16, 16).get();
+    }
+    void set_protocol_type(uint16_t value) {
+        BitField<uint16_t>(data_, 16, 16).set(value);
+    }
+    
+    // HeaderBase implementation
+    std::vector<uint8_t> to_bytes() const override { return data_; }
+    
+    bool from_bytes(const std::vector<uint8_t>& data) override {
+        if (data.size() < 4) return false;
+        data_ = data;
+        data_.resize(4);
+        return true;
+    }
+    
+    size_t size_bits() const override { return 32; }
+    bool is_valid() const override { return data_.size() == 4; }
+    
+    void update_computed_fields() override {
+    }
+    
+private:
+    std::vector<uint8_t> data_;
+};
+
+// Generated from DSL: header PPPoEHeader
+class PPPoEHeader : public HeaderBase {
+public:
+    PPPoEHeader() : data_(6, 0) {}
+    
+    // version field (4 bits)
+    uint8_t version() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 0, 4).get();
+    }
+    void set_version(uint8_t value) {
+        BitField<uint8_t>(data_, 0, 4).set(value);
+    }
+    
+    // type field (4 bits)
+    uint8_t type() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 4, 4).get();
+    }
+    void set_type(uint8_t value) {
+        BitField<uint8_t>(data_, 4, 4).set(value);
+    }
+    
+    // code field (8 bits)
+    uint8_t code() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 8, 8).get();
+    }
+    void set_code(uint8_t value) {
+        BitField<uint8_t>(data_, 8, 8).set(value);
+    }
+    
+    // session_id field (16 bits)
+    uint16_t session_id() const {
+        return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 16, 16).get();
+    }
+    void set_session_id(uint16_t value) {
+        BitField<uint16_t>(data_, 16, 16).set(value);
+    }
+    
+    // length field (16 bits)
+    uint16_t length() const {
+        return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 32, 16).get();
+    }
+    void set_length(uint16_t value) {
+        BitField<uint16_t>(data_, 32, 16).set(value);
+    }
+    
+    // HeaderBase implementation
+    std::vector<uint8_t> to_bytes() const override { return data_; }
+    
+    bool from_bytes(const std::vector<uint8_t>& data) override {
+        if (data.size() < 6) return false;
+        data_ = data;
+        data_.resize(6);
+        return true;
+    }
+    
+    size_t size_bits() const override { return 48; }
+    bool is_valid() const override { return data_.size() == 6; }
+    
+    void update_computed_fields() override {
+    }
+    
+private:
+    std::vector<uint8_t> data_;
+};
+
+// Generated from DSL: header L2TPHeader
+class L2TPHeader : public HeaderBase {
+public:
+    L2TPHeader() : data_(8, 0) {}
+    
+    // type field (1 bits)
+    uint8_t type() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 0, 1).get();
+    }
+    void set_type(uint8_t value) {
+        BitField<uint8_t>(data_, 0, 1).set(value);
+    }
+    
+    // length_present field (1 bits)
+    uint8_t length_present() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 1, 1).get();
+    }
+    void set_length_present(uint8_t value) {
+        BitField<uint8_t>(data_, 1, 1).set(value);
+    }
+    
+    // reserved field (2 bits)
+    uint8_t reserved() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 2, 2).get();
+    }
+    void set_reserved(uint8_t value) {
+        BitField<uint8_t>(data_, 2, 2).set(value);
+    }
+    
+    // sequence_present field (1 bits)
+    uint8_t sequence_present() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 4, 1).get();
+    }
+    void set_sequence_present(uint8_t value) {
+        BitField<uint8_t>(data_, 4, 1).set(value);
+    }
+    
+    // reserved2 field (1 bits)
+    uint8_t reserved2() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 5, 1).get();
+    }
+    void set_reserved2(uint8_t value) {
+        BitField<uint8_t>(data_, 5, 1).set(value);
+    }
+    
+    // offset_present field (1 bits)
+    uint8_t offset_present() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 6, 1).get();
+    }
+    void set_offset_present(uint8_t value) {
+        BitField<uint8_t>(data_, 6, 1).set(value);
+    }
+    
+    // priority field (1 bits)
+    uint8_t priority() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 7, 1).get();
+    }
+    void set_priority(uint8_t value) {
+        BitField<uint8_t>(data_, 7, 1).set(value);
+    }
+    
+    // reserved3 field (4 bits)
+    uint8_t reserved3() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 8, 4).get();
+    }
+    void set_reserved3(uint8_t value) {
+        BitField<uint8_t>(data_, 8, 4).set(value);
+    }
+    
+    // version field (4 bits)
+    uint8_t version() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 12, 4).get();
+    }
+    void set_version(uint8_t value) {
+        BitField<uint8_t>(data_, 12, 4).set(value);
+    }
+    
+    // length field (16 bits)
+    uint16_t length() const {
+        return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 16, 16).get();
+    }
+    void set_length(uint16_t value) {
+        BitField<uint16_t>(data_, 16, 16).set(value);
+    }
+    
+    // tunnel_id field (16 bits)
+    uint16_t tunnel_id() const {
+        return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 32, 16).get();
+    }
+    void set_tunnel_id(uint16_t value) {
+        BitField<uint16_t>(data_, 32, 16).set(value);
+    }
+    
+    // session_id field (16 bits)
+    uint16_t session_id() const {
+        return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 48, 16).get();
+    }
+    void set_session_id(uint16_t value) {
+        BitField<uint16_t>(data_, 48, 16).set(value);
+    }
+    
+    // HeaderBase implementation
+    std::vector<uint8_t> to_bytes() const override { return data_; }
+    
+    bool from_bytes(const std::vector<uint8_t>& data) override {
+        if (data.size() < 8) return false;
+        data_ = data;
+        data_.resize(8);
+        return true;
+    }
+    
+    size_t size_bits() const override { return 64; }
+    bool is_valid() const override { return data_.size() == 8; }
+    
+    void update_computed_fields() override {
+    }
+    
+private:
+    std::vector<uint8_t> data_;
+};
+
+// Generated from DSL: header VXLANHeader
+class VXLANHeader : public HeaderBase {
+public:
+    VXLANHeader() : data_(8, 0) {}
+    
+    // flags field (8 bits)
+    uint8_t flags() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 0, 8).get();
+    }
+    void set_flags(uint8_t value) {
+        BitField<uint8_t>(data_, 0, 8).set(value);
+    }
+    
+    // reserved1 field (24 bits)
+    uint32_t reserved1() const {
+        return BitField<uint32_t>(const_cast<std::vector<uint8_t>&>(data_), 8, 24).get();
+    }
+    void set_reserved1(uint32_t value) {
+        BitField<uint32_t>(data_, 8, 24).set(value);
+    }
+    
+    // vni field (24 bits)
+    uint32_t vni() const {
+        return BitField<uint32_t>(const_cast<std::vector<uint8_t>&>(data_), 32, 24).get();
+    }
+    void set_vni(uint32_t value) {
+        BitField<uint32_t>(data_, 32, 24).set(value);
+    }
+    
+    // reserved2 field (8 bits)
+    uint8_t reserved2() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 56, 8).get();
+    }
+    void set_reserved2(uint8_t value) {
+        BitField<uint8_t>(data_, 56, 8).set(value);
+    }
+    
+    // HeaderBase implementation
+    std::vector<uint8_t> to_bytes() const override { return data_; }
+    
+    bool from_bytes(const std::vector<uint8_t>& data) override {
+        if (data.size() < 8) return false;
+        data_ = data;
+        data_.resize(8);
+        return true;
+    }
+    
+    size_t size_bits() const override { return 64; }
+    bool is_valid() const override { return data_.size() == 8; }
+    
+    void update_computed_fields() override {
+    }
+    
+private:
+    std::vector<uint8_t> data_;
+};
+
+// Generated from DSL: header GENEVEHeader
+class GENEVEHeader : public HeaderBase {
+public:
+    GENEVEHeader() : data_(8, 0) {}
+    
+    // version field (2 bits)
+    uint8_t version() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 0, 2).get();
+    }
+    void set_version(uint8_t value) {
+        BitField<uint8_t>(data_, 0, 2).set(value);
+    }
+    
+    // opt_len field (6 bits)
+    uint8_t opt_len() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 2, 6).get();
+    }
+    void set_opt_len(uint8_t value) {
+        BitField<uint8_t>(data_, 2, 6).set(value);
+    }
+    
+    // oam field (1 bits)
+    uint8_t oam() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 8, 1).get();
+    }
+    void set_oam(uint8_t value) {
+        BitField<uint8_t>(data_, 8, 1).set(value);
+    }
+    
+    // critical field (1 bits)
+    uint8_t critical() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 9, 1).get();
+    }
+    void set_critical(uint8_t value) {
+        BitField<uint8_t>(data_, 9, 1).set(value);
+    }
+    
+    // reserved field (6 bits)
+    uint8_t reserved() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 10, 6).get();
+    }
+    void set_reserved(uint8_t value) {
+        BitField<uint8_t>(data_, 10, 6).set(value);
+    }
+    
+    // protocol_type field (16 bits)
+    uint16_t protocol_type() const {
+        return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 16, 16).get();
+    }
+    void set_protocol_type(uint16_t value) {
+        BitField<uint16_t>(data_, 16, 16).set(value);
+    }
+    
+    // vni field (24 bits)
+    uint32_t vni() const {
+        return BitField<uint32_t>(const_cast<std::vector<uint8_t>&>(data_), 32, 24).get();
+    }
+    void set_vni(uint32_t value) {
+        BitField<uint32_t>(data_, 32, 24).set(value);
+    }
+    
+    // reserved2 field (8 bits)
+    uint8_t reserved2() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 56, 8).get();
+    }
+    void set_reserved2(uint8_t value) {
+        BitField<uint8_t>(data_, 56, 8).set(value);
+    }
+    
+    // HeaderBase implementation
+    std::vector<uint8_t> to_bytes() const override { return data_; }
+    
+    bool from_bytes(const std::vector<uint8_t>& data) override {
+        if (data.size() < 8) return false;
+        data_ = data;
+        data_.resize(8);
+        return true;
+    }
+    
+    size_t size_bits() const override { return 64; }
+    bool is_valid() const override { return data_.size() == 8; }
+    
+    void update_computed_fields() override {
+    }
+    
+private:
+    std::vector<uint8_t> data_;
+};
+
+// Generated from DSL: header NVGREHeader
+class NVGREHeader : public HeaderBase {
+public:
+    NVGREHeader() : data_(8, 0) {}
+    
+    // checksum_present field (1 bits)
+    uint8_t checksum_present() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 0, 1).get();
+    }
+    void set_checksum_present(uint8_t value) {
+        BitField<uint8_t>(data_, 0, 1).set(value);
+    }
+    
+    // routing_present field (1 bits)
+    uint8_t routing_present() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 1, 1).get();
+    }
+    void set_routing_present(uint8_t value) {
+        BitField<uint8_t>(data_, 1, 1).set(value);
+    }
+    
+    // key_present field (1 bits)
+    uint8_t key_present() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 2, 1).get();
+    }
+    void set_key_present(uint8_t value) {
+        BitField<uint8_t>(data_, 2, 1).set(value);
+    }
+    
+    // sequence_present field (1 bits)
+    uint8_t sequence_present() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 3, 1).get();
+    }
+    void set_sequence_present(uint8_t value) {
+        BitField<uint8_t>(data_, 3, 1).set(value);
+    }
+    
+    // strict_source_route field (1 bits)
+    uint8_t strict_source_route() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 4, 1).get();
+    }
+    void set_strict_source_route(uint8_t value) {
+        BitField<uint8_t>(data_, 4, 1).set(value);
+    }
+    
+    // recursion_control field (3 bits)
+    uint8_t recursion_control() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 5, 3).get();
+    }
+    void set_recursion_control(uint8_t value) {
+        BitField<uint8_t>(data_, 5, 3).set(value);
+    }
+    
+    // ack_present field (1 bits)
+    uint8_t ack_present() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 8, 1).get();
+    }
+    void set_ack_present(uint8_t value) {
+        BitField<uint8_t>(data_, 8, 1).set(value);
+    }
+    
+    // flags field (4 bits)
+    uint8_t flags() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 9, 4).get();
+    }
+    void set_flags(uint8_t value) {
+        BitField<uint8_t>(data_, 9, 4).set(value);
+    }
+    
+    // version field (3 bits)
+    uint8_t version() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 13, 3).get();
+    }
+    void set_version(uint8_t value) {
+        BitField<uint8_t>(data_, 13, 3).set(value);
+    }
+    
+    // protocol_type field (16 bits)
+    uint16_t protocol_type() const {
+        return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 16, 16).get();
+    }
+    void set_protocol_type(uint16_t value) {
+        BitField<uint16_t>(data_, 16, 16).set(value);
+    }
+    
+    // vsid field (24 bits)
+    uint32_t vsid() const {
+        return BitField<uint32_t>(const_cast<std::vector<uint8_t>&>(data_), 32, 24).get();
+    }
+    void set_vsid(uint32_t value) {
+        BitField<uint32_t>(data_, 32, 24).set(value);
+    }
+    
+    // flow_id field (8 bits)
+    uint8_t flow_id() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 56, 8).get();
+    }
+    void set_flow_id(uint8_t value) {
+        BitField<uint8_t>(data_, 56, 8).set(value);
+    }
+    
+    // HeaderBase implementation
+    std::vector<uint8_t> to_bytes() const override { return data_; }
+    
+    bool from_bytes(const std::vector<uint8_t>& data) override {
+        if (data.size() < 8) return false;
+        data_ = data;
+        data_.resize(8);
+        return true;
+    }
+    
+    size_t size_bits() const override { return 64; }
+    bool is_valid() const override { return data_.size() == 8; }
+    
+    void update_computed_fields() override {
+    }
+    
+private:
+    std::vector<uint8_t> data_;
+};
+
+// Generated from DSL: header SCTPHeader
+class SCTPHeader : public HeaderBase {
+public:
+    SCTPHeader() : data_(12, 0) {}
+    
+    // src_port field (16 bits)
+    uint16_t src_port() const {
+        return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 0, 16).get();
+    }
+    void set_src_port(uint16_t value) {
+        BitField<uint16_t>(data_, 0, 16).set(value);
+    }
+    
+    // dst_port field (16 bits)
+    uint16_t dst_port() const {
+        return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 16, 16).get();
+    }
+    void set_dst_port(uint16_t value) {
+        BitField<uint16_t>(data_, 16, 16).set(value);
+    }
+    
+    // verification_tag field (32 bits)
+    uint32_t verification_tag() const {
+        return BitField<uint32_t>(const_cast<std::vector<uint8_t>&>(data_), 32, 32).get();
+    }
+    void set_verification_tag(uint32_t value) {
+        BitField<uint32_t>(data_, 32, 32).set(value);
+    }
+    
+    // checksum field (32 bits)
+    uint32_t checksum() const {
+        return BitField<uint32_t>(const_cast<std::vector<uint8_t>&>(data_), 64, 32).get();
+    }
+    void set_checksum(uint32_t value) {
+        BitField<uint32_t>(data_, 64, 32).set(value);
+    }
+    
+    // HeaderBase implementation
+    std::vector<uint8_t> to_bytes() const override { return data_; }
+    
+    bool from_bytes(const std::vector<uint8_t>& data) override {
+        if (data.size() < 12) return false;
+        data_ = data;
+        data_.resize(12);
+        return true;
+    }
+    
+    size_t size_bits() const override { return 96; }
+    bool is_valid() const override { return data_.size() == 12; }
+    
+    void update_computed_fields() override {
+        // Update checksum field
+        // TODO: Implement checksum calculation
+    }
+    
+private:
+    std::vector<uint8_t> data_;
+};
+
+// Generated from DSL: header ESPHeader
+class ESPHeader : public HeaderBase {
+public:
+    ESPHeader() : data_(8, 0) {}
+    
+    // spi field (32 bits)
+    uint32_t spi() const {
+        return BitField<uint32_t>(const_cast<std::vector<uint8_t>&>(data_), 0, 32).get();
+    }
+    void set_spi(uint32_t value) {
+        BitField<uint32_t>(data_, 0, 32).set(value);
+    }
+    
+    // sequence field (32 bits)
+    uint32_t sequence() const {
+        return BitField<uint32_t>(const_cast<std::vector<uint8_t>&>(data_), 32, 32).get();
+    }
+    void set_sequence(uint32_t value) {
+        BitField<uint32_t>(data_, 32, 32).set(value);
+    }
+    
+    // HeaderBase implementation
+    std::vector<uint8_t> to_bytes() const override { return data_; }
+    
+    bool from_bytes(const std::vector<uint8_t>& data) override {
+        if (data.size() < 8) return false;
+        data_ = data;
+        data_.resize(8);
+        return true;
+    }
+    
+    size_t size_bits() const override { return 64; }
+    bool is_valid() const override { return data_.size() == 8; }
+    
+    void update_computed_fields() override {
+    }
+    
+private:
+    std::vector<uint8_t> data_;
+};
+
+// Generated from DSL: header AHHeader
+class AHHeader : public HeaderBase {
+public:
+    AHHeader() : data_(12, 0) {}
+    
+    // next_header field (8 bits)
+    IPProtocol next_header() const {
+        return static_cast<IPProtocol>(BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 0, 8).get());
+    }
+    void set_next_header(IPProtocol value) {
+        BitField<uint8_t>(data_, 0, 8).set(static_cast<uint8_t>(value));
+    }
+    
+    // payload_len field (8 bits)
+    uint8_t payload_len() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 8, 8).get();
+    }
+    void set_payload_len(uint8_t value) {
+        BitField<uint8_t>(data_, 8, 8).set(value);
+    }
+    
+    // reserved field (16 bits)
+    uint16_t reserved() const {
+        return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 16, 16).get();
+    }
+    void set_reserved(uint16_t value) {
+        BitField<uint16_t>(data_, 16, 16).set(value);
+    }
+    
+    // spi field (32 bits)
+    uint32_t spi() const {
+        return BitField<uint32_t>(const_cast<std::vector<uint8_t>&>(data_), 32, 32).get();
+    }
+    void set_spi(uint32_t value) {
+        BitField<uint32_t>(data_, 32, 32).set(value);
+    }
+    
+    // sequence field (32 bits)
+    uint32_t sequence() const {
+        return BitField<uint32_t>(const_cast<std::vector<uint8_t>&>(data_), 64, 32).get();
+    }
+    void set_sequence(uint32_t value) {
+        BitField<uint32_t>(data_, 64, 32).set(value);
+    }
+    
+    // HeaderBase implementation
+    std::vector<uint8_t> to_bytes() const override { return data_; }
+    
+    bool from_bytes(const std::vector<uint8_t>& data) override {
+        if (data.size() < 12) return false;
+        data_ = data;
+        data_.resize(12);
+        return true;
+    }
+    
+    size_t size_bits() const override { return 96; }
+    bool is_valid() const override { return data_.size() == 12; }
+    
+    void update_computed_fields() override {
+    }
+    
+private:
+    std::vector<uint8_t> data_;
+};
+
+// Generated from DSL: header IGMPHeader
+class IGMPHeader : public HeaderBase {
+public:
+    IGMPHeader() : data_(8, 0) {}
+    
+    // type field (8 bits)
+    uint8_t type() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 0, 8).get();
+    }
+    void set_type(uint8_t value) {
+        BitField<uint8_t>(data_, 0, 8).set(value);
+    }
+    
+    // max_resp_time field (8 bits)
+    uint8_t max_resp_time() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 8, 8).get();
+    }
+    void set_max_resp_time(uint8_t value) {
+        BitField<uint8_t>(data_, 8, 8).set(value);
+    }
+    
+    // checksum field (16 bits)
+    uint16_t checksum() const {
+        return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 16, 16).get();
+    }
+    void set_checksum(uint16_t value) {
+        BitField<uint16_t>(data_, 16, 16).set(value);
+    }
+    
+    // group_address field (32 bits)
+    uint32_t group_address() const {
+        return BitField<uint32_t>(const_cast<std::vector<uint8_t>&>(data_), 32, 32).get();
+    }
+    void set_group_address(uint32_t value) {
+        BitField<uint32_t>(data_, 32, 32).set(value);
+    }
+    
+    // HeaderBase implementation
+    std::vector<uint8_t> to_bytes() const override { return data_; }
+    
+    bool from_bytes(const std::vector<uint8_t>& data) override {
+        if (data.size() < 8) return false;
+        data_ = data;
+        data_.resize(8);
+        return true;
+    }
+    
+    size_t size_bits() const override { return 64; }
+    bool is_valid() const override { return data_.size() == 8; }
+    
+    void update_computed_fields() override {
+        // Update checksum field
+        // TODO: Implement checksum calculation
+    }
+    
+private:
+    std::vector<uint8_t> data_;
+};
+
+// Generated from DSL: header OSPFHeader
+class OSPFHeader : public HeaderBase {
+public:
+    OSPFHeader() : data_(24, 0) {}
+    
+    // version field (8 bits)
+    uint8_t version() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 0, 8).get();
+    }
+    void set_version(uint8_t value) {
+        BitField<uint8_t>(data_, 0, 8).set(value);
+    }
+    
+    // type field (8 bits)
+    uint8_t type() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 8, 8).get();
+    }
+    void set_type(uint8_t value) {
+        BitField<uint8_t>(data_, 8, 8).set(value);
+    }
+    
+    // length field (16 bits)
+    uint16_t length() const {
+        return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 16, 16).get();
+    }
+    void set_length(uint16_t value) {
+        BitField<uint16_t>(data_, 16, 16).set(value);
+    }
+    
+    // router_id field (32 bits)
+    uint32_t router_id() const {
+        return BitField<uint32_t>(const_cast<std::vector<uint8_t>&>(data_), 32, 32).get();
+    }
+    void set_router_id(uint32_t value) {
+        BitField<uint32_t>(data_, 32, 32).set(value);
+    }
+    
+    // area_id field (32 bits)
+    uint32_t area_id() const {
+        return BitField<uint32_t>(const_cast<std::vector<uint8_t>&>(data_), 64, 32).get();
+    }
+    void set_area_id(uint32_t value) {
+        BitField<uint32_t>(data_, 64, 32).set(value);
+    }
+    
+    // checksum field (16 bits)
+    uint16_t checksum() const {
+        return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 96, 16).get();
+    }
+    void set_checksum(uint16_t value) {
+        BitField<uint16_t>(data_, 96, 16).set(value);
+    }
+    
+    // auth_type field (16 bits)
+    uint16_t auth_type() const {
+        return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 112, 16).get();
+    }
+    void set_auth_type(uint16_t value) {
+        BitField<uint16_t>(data_, 112, 16).set(value);
+    }
+    
+    // authentication field (64 bits)
+    uint64_t authentication() const {
+        return BitField<uint64_t>(const_cast<std::vector<uint8_t>&>(data_), 128, 64).get();
+    }
+    void set_authentication(uint64_t value) {
+        BitField<uint64_t>(data_, 128, 64).set(value);
+    }
+    
+    // HeaderBase implementation
+    std::vector<uint8_t> to_bytes() const override { return data_; }
+    
+    bool from_bytes(const std::vector<uint8_t>& data) override {
+        if (data.size() < 24) return false;
+        data_ = data;
+        data_.resize(24);
+        return true;
+    }
+    
+    size_t size_bits() const override { return 192; }
+    bool is_valid() const override { return data_.size() == 24; }
+    
+    void update_computed_fields() override {
+        // Update checksum field
+        // TODO: Implement checksum calculation
+    }
+    
+private:
+    std::vector<uint8_t> data_;
+};
+
+// Generated from DSL: header RIPHeader
+class RIPHeader : public HeaderBase {
+public:
+    RIPHeader() : data_(4, 0) {}
+    
+    // command field (8 bits)
+    uint8_t command() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 0, 8).get();
+    }
+    void set_command(uint8_t value) {
+        BitField<uint8_t>(data_, 0, 8).set(value);
+    }
+    
+    // version field (8 bits)
+    uint8_t version() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 8, 8).get();
+    }
+    void set_version(uint8_t value) {
+        BitField<uint8_t>(data_, 8, 8).set(value);
+    }
+    
+    // reserved field (16 bits)
+    uint16_t reserved() const {
+        return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 16, 16).get();
+    }
+    void set_reserved(uint16_t value) {
+        BitField<uint16_t>(data_, 16, 16).set(value);
+    }
+    
+    // HeaderBase implementation
+    std::vector<uint8_t> to_bytes() const override { return data_; }
+    
+    bool from_bytes(const std::vector<uint8_t>& data) override {
+        if (data.size() < 4) return false;
+        data_ = data;
+        data_.resize(4);
+        return true;
+    }
+    
+    size_t size_bits() const override { return 32; }
+    bool is_valid() const override { return data_.size() == 4; }
+    
+    void update_computed_fields() override {
+    }
+    
+private:
+    std::vector<uint8_t> data_;
+};
+
+// Generated from DSL: header HSRPHeader
+class HSRPHeader : public HeaderBase {
+public:
+    HSRPHeader() : data_(20, 0) {}
+    
+    // version field (8 bits)
+    uint8_t version() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 0, 8).get();
+    }
+    void set_version(uint8_t value) {
+        BitField<uint8_t>(data_, 0, 8).set(value);
+    }
+    
+    // opcode field (8 bits)
+    uint8_t opcode() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 8, 8).get();
+    }
+    void set_opcode(uint8_t value) {
+        BitField<uint8_t>(data_, 8, 8).set(value);
+    }
+    
+    // state field (8 bits)
+    uint8_t state() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 16, 8).get();
+    }
+    void set_state(uint8_t value) {
+        BitField<uint8_t>(data_, 16, 8).set(value);
+    }
+    
+    // hello_time field (8 bits)
+    uint8_t hello_time() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 24, 8).get();
+    }
+    void set_hello_time(uint8_t value) {
+        BitField<uint8_t>(data_, 24, 8).set(value);
+    }
+    
+    // hold_time field (8 bits)
+    uint8_t hold_time() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 32, 8).get();
+    }
+    void set_hold_time(uint8_t value) {
+        BitField<uint8_t>(data_, 32, 8).set(value);
+    }
+    
+    // priority field (8 bits)
+    uint8_t priority() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 40, 8).get();
+    }
+    void set_priority(uint8_t value) {
+        BitField<uint8_t>(data_, 40, 8).set(value);
+    }
+    
+    // group field (8 bits)
+    uint8_t group() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 48, 8).get();
+    }
+    void set_group(uint8_t value) {
+        BitField<uint8_t>(data_, 48, 8).set(value);
+    }
+    
+    // reserved field (8 bits)
+    uint8_t reserved() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 56, 8).get();
+    }
+    void set_reserved(uint8_t value) {
+        BitField<uint8_t>(data_, 56, 8).set(value);
+    }
+    
+    // auth_data field (64 bits)
+    uint64_t auth_data() const {
+        return BitField<uint64_t>(const_cast<std::vector<uint8_t>&>(data_), 64, 64).get();
+    }
+    void set_auth_data(uint64_t value) {
+        BitField<uint64_t>(data_, 64, 64).set(value);
+    }
+    
+    // virtual_ip field (32 bits)
+    uint32_t virtual_ip() const {
+        return BitField<uint32_t>(const_cast<std::vector<uint8_t>&>(data_), 128, 32).get();
+    }
+    void set_virtual_ip(uint32_t value) {
+        BitField<uint32_t>(data_, 128, 32).set(value);
+    }
+    
+    // HeaderBase implementation
+    std::vector<uint8_t> to_bytes() const override { return data_; }
+    
+    bool from_bytes(const std::vector<uint8_t>& data) override {
+        if (data.size() < 20) return false;
+        data_ = data;
+        data_.resize(20);
+        return true;
+    }
+    
+    size_t size_bits() const override { return 160; }
+    bool is_valid() const override { return data_.size() == 20; }
+    
+    void update_computed_fields() override {
+    }
+    
+private:
+    std::vector<uint8_t> data_;
+};
+
+// Generated from DSL: header LACPHeader
+class LACPHeader : public HeaderBase {
+public:
+    LACPHeader() : data_(110, 0) {}
+    
+    // subtype field (8 bits)
+    uint8_t subtype() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 0, 8).get();
+    }
+    void set_subtype(uint8_t value) {
+        BitField<uint8_t>(data_, 0, 8).set(value);
+    }
+    
+    // version_number field (8 bits)
+    uint8_t version_number() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 8, 8).get();
+    }
+    void set_version_number(uint8_t value) {
+        BitField<uint8_t>(data_, 8, 8).set(value);
+    }
+    
+    // actor_type field (8 bits)
+    uint8_t actor_type() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 16, 8).get();
+    }
+    void set_actor_type(uint8_t value) {
+        BitField<uint8_t>(data_, 16, 8).set(value);
+    }
+    
+    // actor_info_len field (8 bits)
+    uint8_t actor_info_len() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 24, 8).get();
+    }
+    void set_actor_info_len(uint8_t value) {
+        BitField<uint8_t>(data_, 24, 8).set(value);
+    }
+    
+    // actor_sys_priority field (16 bits)
+    uint16_t actor_sys_priority() const {
+        return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 32, 16).get();
+    }
+    void set_actor_sys_priority(uint16_t value) {
+        BitField<uint16_t>(data_, 32, 16).set(value);
+    }
+    
+    // actor_system field (48 bits)
+    uint64_t actor_system() const {
+        return BitField<uint64_t>(const_cast<std::vector<uint8_t>&>(data_), 48, 48).get();
+    }
+    void set_actor_system(uint64_t value) {
+        BitField<uint64_t>(data_, 48, 48).set(value);
+    }
+    
+    // actor_key field (16 bits)
+    uint16_t actor_key() const {
+        return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 96, 16).get();
+    }
+    void set_actor_key(uint16_t value) {
+        BitField<uint16_t>(data_, 96, 16).set(value);
+    }
+    
+    // actor_port_priority field (16 bits)
+    uint16_t actor_port_priority() const {
+        return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 112, 16).get();
+    }
+    void set_actor_port_priority(uint16_t value) {
+        BitField<uint16_t>(data_, 112, 16).set(value);
+    }
+    
+    // actor_port field (16 bits)
+    uint16_t actor_port() const {
+        return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 128, 16).get();
+    }
+    void set_actor_port(uint16_t value) {
+        BitField<uint16_t>(data_, 128, 16).set(value);
+    }
+    
+    // actor_state field (8 bits)
+    uint8_t actor_state() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 144, 8).get();
+    }
+    void set_actor_state(uint8_t value) {
+        BitField<uint8_t>(data_, 144, 8).set(value);
+    }
+    
+    // reserved1 field (24 bits)
+    uint32_t reserved1() const {
+        return BitField<uint32_t>(const_cast<std::vector<uint8_t>&>(data_), 152, 24).get();
+    }
+    void set_reserved1(uint32_t value) {
+        BitField<uint32_t>(data_, 152, 24).set(value);
+    }
+    
+    // partner_type field (8 bits)
+    uint8_t partner_type() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 176, 8).get();
+    }
+    void set_partner_type(uint8_t value) {
+        BitField<uint8_t>(data_, 176, 8).set(value);
+    }
+    
+    // partner_info_len field (8 bits)
+    uint8_t partner_info_len() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 184, 8).get();
+    }
+    void set_partner_info_len(uint8_t value) {
+        BitField<uint8_t>(data_, 184, 8).set(value);
+    }
+    
+    // partner_sys_priority field (16 bits)
+    uint16_t partner_sys_priority() const {
+        return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 192, 16).get();
+    }
+    void set_partner_sys_priority(uint16_t value) {
+        BitField<uint16_t>(data_, 192, 16).set(value);
+    }
+    
+    // partner_system field (48 bits)
+    uint64_t partner_system() const {
+        return BitField<uint64_t>(const_cast<std::vector<uint8_t>&>(data_), 208, 48).get();
+    }
+    void set_partner_system(uint64_t value) {
+        BitField<uint64_t>(data_, 208, 48).set(value);
+    }
+    
+    // partner_key field (16 bits)
+    uint16_t partner_key() const {
+        return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 256, 16).get();
+    }
+    void set_partner_key(uint16_t value) {
+        BitField<uint16_t>(data_, 256, 16).set(value);
+    }
+    
+    // partner_port_priority field (16 bits)
+    uint16_t partner_port_priority() const {
+        return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 272, 16).get();
+    }
+    void set_partner_port_priority(uint16_t value) {
+        BitField<uint16_t>(data_, 272, 16).set(value);
+    }
+    
+    // partner_port field (16 bits)
+    uint16_t partner_port() const {
+        return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 288, 16).get();
+    }
+    void set_partner_port(uint16_t value) {
+        BitField<uint16_t>(data_, 288, 16).set(value);
+    }
+    
+    // partner_state field (8 bits)
+    uint8_t partner_state() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 304, 8).get();
+    }
+    void set_partner_state(uint8_t value) {
+        BitField<uint8_t>(data_, 304, 8).set(value);
+    }
+    
+    // reserved2 field (24 bits)
+    uint32_t reserved2() const {
+        return BitField<uint32_t>(const_cast<std::vector<uint8_t>&>(data_), 312, 24).get();
+    }
+    void set_reserved2(uint32_t value) {
+        BitField<uint32_t>(data_, 312, 24).set(value);
+    }
+    
+    // collector_type field (8 bits)
+    uint8_t collector_type() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 336, 8).get();
+    }
+    void set_collector_type(uint8_t value) {
+        BitField<uint8_t>(data_, 336, 8).set(value);
+    }
+    
+    // collector_info_len field (8 bits)
+    uint8_t collector_info_len() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 344, 8).get();
+    }
+    void set_collector_info_len(uint8_t value) {
+        BitField<uint8_t>(data_, 344, 8).set(value);
+    }
+    
+    // collector_max_delay field (16 bits)
+    uint16_t collector_max_delay() const {
+        return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 352, 16).get();
+    }
+    void set_collector_max_delay(uint16_t value) {
+        BitField<uint16_t>(data_, 352, 16).set(value);
+    }
+    
+    // reserved3 field (96 bits)
+    uint64_t reserved3() const {
+        return BitField<uint64_t>(const_cast<std::vector<uint8_t>&>(data_), 368, 96).get();
+    }
+    void set_reserved3(uint64_t value) {
+        BitField<uint64_t>(data_, 368, 96).set(value);
+    }
+    
+    // terminator_type field (8 bits)
+    uint8_t terminator_type() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 464, 8).get();
+    }
+    void set_terminator_type(uint8_t value) {
+        BitField<uint8_t>(data_, 464, 8).set(value);
+    }
+    
+    // terminator_len field (8 bits)
+    uint8_t terminator_len() const {
+        return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 472, 8).get();
+    }
+    void set_terminator_len(uint8_t value) {
+        BitField<uint8_t>(data_, 472, 8).set(value);
+    }
+    
+    // reserved4 field (400 bits)
+    uint64_t reserved4() const {
+        return BitField<uint64_t>(const_cast<std::vector<uint8_t>&>(data_), 480, 400).get();
+    }
+    void set_reserved4(uint64_t value) {
+        BitField<uint64_t>(data_, 480, 400).set(value);
+    }
+    
+    // HeaderBase implementation
+    std::vector<uint8_t> to_bytes() const override { return data_; }
+    
+    bool from_bytes(const std::vector<uint8_t>& data) override {
+        if (data.size() < 110) return false;
+        data_ = data;
+        data_.resize(110);
+        return true;
+    }
+    
+    size_t size_bits() const override { return 880; }
+    bool is_valid() const override { return data_.size() == 110; }
+    
+    void update_computed_fields() override {
     }
     
 private:
