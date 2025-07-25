@@ -1,16 +1,30 @@
 # CppScapy - Network Header Construction Library
 
-A convenient C++ library for constructing standard network headers (MAC, IPv4, IPv6, TCP, UDP, ICMP, etc.) with a clean, fluent API.
+A convenient C++ library for constructing standard network headers (MAC, IPv4, IPv6, TCP, UDP, ICMP, etc.) with a clean, fluent API and comprehensive Header Definition Language (HDL) compiler.
 
 ## Features
 
+- **Header Definition Language (HDL)**: Declarative syntax for defining network protocol headers
+- **HDL Compiler**: Generates type-safe C++ classes from HDL definitions
+- **25+ Protocol Headers**: Comprehensive protocol support including IPv4/IPv6, TCP/UDP, DHCP, DNS, VPN protocols
 - **MAC Address Support**: Parse, create, and manipulate MAC addresses
-- **IPv4 Address Support**: Handle IPv4 addresses with various input formats
-- **IPv6 Address Support**: Basic IPv6 address handling
+- **IPv4/IPv6 Address Support**: Handle IP addresses with various input formats
 - **Network Headers**: Ethernet, IPv4, IPv6, TCP, UDP, ICMP header construction
 - **Packet Builder**: Fluent API for building complete network packets
 - **Convenience Patterns**: Pre-built patterns for common packet types
 - **Header Validation**: Automatic checksum calculation and validation
+- **Type Safety**: Compile-time type checking and enum validation
+- **Bit-Field Manipulation**: Precise control over protocol field layouts
+
+## Requirements
+
+### For HDL Compiler
+- **Python 3.7+** (Python 3.8+ recommended)
+- Standard library only (no external dependencies)
+
+### For C++ Library
+- **C++17** compatible compiler (GCC 7+, Clang 5+, MSVC 2017+)
+- CMake 3.10+ for building
 
 ## Quick Start
 

@@ -1,0 +1,25 @@
+# cppscapy HDL Compiler Requirements
+# 
+# This file specifies the Python version and any external dependencies
+# required to run the HDL compiler and associated tools.
+
+# Python version requirement
+python_requires>=3.7
+
+# No external dependencies required - uses only Python standard library:
+# - argparse (command line parsing)
+# - re (regular expressions for parsing HDL syntax) 
+# - sys (system interface)
+# - typing (type hints)
+# - dataclasses (structured data classes)
+# - enum (enumeration support)
+
+# Optional development dependencies (for testing and development):
+# pytest>=6.0.0
+# mypy>=0.910
+# black>=21.0.0
+# flake8>=3.9.0
+
+# For generating documentation:
+# sphinx>=4.0.0
+# sphinx-rtd-theme>=0.5.0

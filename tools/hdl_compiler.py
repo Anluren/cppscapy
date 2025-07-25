@@ -9,11 +9,23 @@ C++ header classes with precise bit field manipulation.
 Usage:
     python3 hdl_compiler.py input.hdl -o output.h
     python3 hdl_compiler.py --help
+
+Requirements:
+    Python 3.7+ (for dataclasses support)
+    Python 3.8+ recommended for better performance and features
 """
 
 import argparse
 import re
 import sys
+import os
+from pathlib import Path
+
+# Check Python version
+if sys.version_info < (3, 7):
+    print("Error: This script requires Python 3.7 or higher", file=sys.stderr)
+    print(f"Current version: {sys.version}", file=sys.stderr)
+    sys.exit(1)
 from typing import Dict, List, Optional, Tuple, Union
 from dataclasses import dataclass
 from enum import Enum
@@ -214,8 +226,9 @@ class HDLParser:
 class CPPCodeGenerator:
     """Generate C++ code from parsed HDL"""
     
-    def __init__(self, parser: HDLParser):
+    def __init__(self, parser: HDLParser, namespace: str = "cppscapy::dsl"):
         self.parser = parser
+        self.namespace = namespace
         self.output = []
     
     def generate(self) -> str:
@@ -255,7 +268,7 @@ class CPPCodeGenerator:
     def _generate_namespace_open(self):
         """Generate namespace opening"""
         self.output.extend([
-            "namespace cppscapy::dsl {",
+            f"namespace {self.namespace} {{",
             ""
         ])
     
@@ -263,7 +276,7 @@ class CPPCodeGenerator:
         """Generate namespace closing"""
         self.output.extend([
             "",
-            "} // namespace cppscapy::dsl"
+            f"}} // namespace {self.namespace}"
         ])
     
     def _generate_base_classes(self):
@@ -477,29 +490,197 @@ class CPPCodeGenerator:
         return total
 
 
+# Validation functions for command-line arguments
+def is_valid_filename(filename: str) -> bool:
+    """Cross-platform filename validation using multiple approaches"""
+    if not filename:
+        return False
+    
+    # Method 1: Try to create a Path object and resolve it
+    try:
+        path = Path(filename)
+        path.resolve()
+    except (OSError, ValueError):
+        return False
+    
+    # Method 2: Check for forbidden characters (platform-specific)
+    import platform
+    if platform.system() == 'Windows':
+        # Windows forbidden characters
+        forbidden = '<>:"|?*'
+        if any(char in filename for char in forbidden):
+            return False
+        # Windows reserved names
+        reserved = {'CON', 'PRN', 'AUX', 'NUL', 'COM1', 'COM2', 'COM3', 'COM4', 
+                   'COM5', 'COM6', 'COM7', 'COM8', 'COM9', 'LPT1', 'LPT2', 
+                   'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9'}
+        if Path(filename).stem.upper() in reserved:
+            return False
+    else:
+        # Unix-like systems: only null character is forbidden
+        if '\0' in filename:
+            return False
+    
+    # Method 3: Check length limits
+    if len(filename) > 255:  # Most filesystems have 255 character limit
+        return False
+    
+    return True
+
+
+def validate_input_file(filename: str) -> str:
+    """Validate input HDL file"""
+    if not filename:
+        raise argparse.ArgumentTypeError("Input file cannot be empty")
+    
+    try:
+        # Use pathlib for robust path validation
+        path = Path(filename)
+        
+        # Check if it's a valid path (this will raise an exception for invalid characters)
+        path.resolve()
+        
+    except (OSError, ValueError) as e:
+        raise argparse.ArgumentTypeError(
+            f"Input file '{filename}' contains invalid path characters: {e}"
+        )
+    
+    # Check file extension
+    if not filename.lower().endswith(('.hdl', '.HDL')):
+        raise argparse.ArgumentTypeError(
+            f"Input file '{filename}' must have .hdl extension"
+        )
+    
+    # Check if file exists
+    if not path.exists():
+        raise argparse.ArgumentTypeError(f"Input file '{filename}' does not exist")
+    
+    # Check if it's actually a file (not a directory)
+    if not path.is_file():
+        raise argparse.ArgumentTypeError(f"'{filename}' is not a file")
+    
+    # Check if file is readable
+    if not os.access(filename, os.R_OK):
+        raise argparse.ArgumentTypeError(f"Input file '{filename}' is not readable")
+    
+    return filename
+
+
+def validate_output_file(filename: str) -> str:
+    """Validate output C++ header file"""
+    if not filename:
+        raise argparse.ArgumentTypeError("Output file cannot be empty")
+    
+    try:
+        # Use pathlib for robust path validation
+        path = Path(filename)
+        
+        # Check if it's a valid path (this will raise an exception for invalid characters)
+        path.resolve()
+        
+    except (OSError, ValueError) as e:
+        raise argparse.ArgumentTypeError(
+            f"Output file '{filename}' contains invalid path characters: {e}"
+        )
+    
+    # Check file extension
+    if not filename.lower().endswith(('.h', '.hpp', '.hxx', '.H')):
+        raise argparse.ArgumentTypeError(
+            f"Output file '{filename}' must have a C++ header extension (.h, .hpp, .hxx)"
+        )
+    
+    # Check if directory exists (if path contains directory)
+    output_dir = path.parent
+    if output_dir != Path('.') and not output_dir.exists():
+        raise argparse.ArgumentTypeError(
+            f"Output directory '{output_dir}' does not exist"
+        )
+    
+    # Check if we can write to the directory
+    if output_dir.exists() and not os.access(output_dir, os.W_OK):
+        raise argparse.ArgumentTypeError(
+            f"Cannot write to output directory '{output_dir}'"
+        )
+    elif output_dir == Path('.') and not os.access('.', os.W_OK):
+        raise argparse.ArgumentTypeError(
+            "Cannot write to current directory"
+        )
+    
+    return filename
+
+
+def validate_namespace(namespace: str) -> str:
+    """Validate C++ namespace"""
+    if not namespace:
+        raise argparse.ArgumentTypeError("Namespace cannot be empty")
+    
+    # Check for valid C++ namespace characters and format
+    namespace_pattern = r'^[a-zA-Z_][a-zA-Z0-9_]*(?:::[a-zA-Z_][a-zA-Z0-9_]*)*$'
+    if not re.match(namespace_pattern, namespace):
+        raise argparse.ArgumentTypeError(
+            f"Namespace '{namespace}' is not a valid C++ namespace. "
+            "Must contain only alphanumeric characters, underscores, and :: separators. "
+            "Cannot start with numbers."
+        )
+    
+    # Check for C++ reserved keywords
+    cpp_keywords = {
+        'auto', 'break', 'case', 'char', 'const', 'continue', 'default', 'do',
+        'double', 'else', 'enum', 'extern', 'float', 'for', 'goto', 'if',
+        'int', 'long', 'register', 'return', 'short', 'signed', 'sizeof', 'static',
+        'struct', 'switch', 'typedef', 'union', 'unsigned', 'void', 'volatile', 'while',
+        'class', 'delete', 'friend', 'inline', 'new', 'operator', 'private',
+        'protected', 'public', 'template', 'this', 'virtual', 'namespace', 'using',
+        'try', 'catch', 'throw', 'const_cast', 'dynamic_cast', 'explicit',
+        'export', 'false', 'mutable', 'reinterpret_cast', 'static_cast', 'true',
+        'typeid', 'typename', 'wchar_t', 'and', 'bitand', 'bitor', 'compl',
+        'not', 'or', 'xor', 'and_eq', 'not_eq', 'or_eq', 'xor_eq'
+    }
+    
+    # Split namespace and check each part
+    parts = namespace.split('::')
+    for part in parts:
+        if part.lower() in cpp_keywords:
+            raise argparse.ArgumentTypeError(
+                f"Namespace part '{part}' is a C++ reserved keyword"
+            )
+    
+    return namespace
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Header Definition Language (HDL) Compiler",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-    hdl_compiler.py example.hdl -o generated_headers.h
-    hdl_compiler.py --input protocols.hdl --output network_headers.h
+    hdl_compiler.py protocols.hdl -o generated_headers.h
+    hdl_compiler.py network_definitions.hdl --output include/network.h
+    hdl_compiler.py --namespace my::protocols input.hdl -o output.h
+
+Constraints:
+    - Input file must have .hdl extension and exist
+    - Output file must have C++ header extension (.h, .hpp, .hxx)
+    - Namespace must be valid C++ identifier(s) separated by ::
+    - Filenames can only contain alphanumeric, dots, underscores, hyphens, and path separators
         """
     )
     
     parser.add_argument(
         "input_file",
-        help="Input HDL file to compile"
+        type=validate_input_file,
+        help="Input HDL file to compile (must have .hdl extension)"
     )
     
     parser.add_argument(
         "-o", "--output",
-        help="Output C++ header file (default: input filename with .h extension)"
+        type=validate_output_file,
+        help="Output C++ header file (must have .h/.hpp/.hxx extension, default: input filename with .h extension)"
     )
     
     parser.add_argument(
         "--namespace",
+        type=validate_namespace,
         default="cppscapy::dsl",
         help="C++ namespace for generated code (default: cppscapy::dsl)"
     )
@@ -510,18 +691,36 @@ Examples:
         help="Enable verbose output"
     )
     
-    args = parser.parse_args()
+    # Add version information
+    parser.add_argument(
+        "--version",
+        action="version",
+        version="HDL Compiler 1.0.0 (Python {}.{}.{})".format(*sys.version_info[:3])
+    )
     
-    # Determine output filename
+    try:
+        args = parser.parse_args()
+    except argparse.ArgumentTypeError as e:
+        parser.error(str(e))
+    
+    # Determine output filename if not provided
     if args.output:
         output_file = args.output
     else:
-        output_file = args.input_file.rsplit('.', 1)[0] + '.h'
+        # Validate the auto-generated output filename
+        base_name = args.input_file.rsplit('.', 1)[0]
+        output_file = base_name + '.h'
+        try:
+            output_file = validate_output_file(output_file)
+        except argparse.ArgumentTypeError as e:
+            parser.error(f"Auto-generated output filename invalid: {e}")
     
     try:
         # Parse HDL file
         if args.verbose:
             print(f"Parsing {args.input_file}...")
+            print(f"Output namespace: {args.namespace}")
+            print(f"Output file: {output_file}")
         
         hdl_parser = HDLParser()
         hdl_parser.parse_file(args.input_file)
@@ -529,27 +728,45 @@ Examples:
         if args.verbose:
             print(f"Found {len(hdl_parser.enums)} enums and {len(hdl_parser.headers)} headers")
         
+        # Validate that we found some content
+        if not hdl_parser.enums and not hdl_parser.headers:
+            print("Warning: No enums or headers found in input file", file=sys.stderr)
+        
         # Generate C++ code
         if args.verbose:
             print(f"Generating C++ code...")
         
-        generator = CPPCodeGenerator(hdl_parser)
+        generator = CPPCodeGenerator(hdl_parser, args.namespace)
         cpp_code = generator.generate()
         
-        # Write output file
-        with open(output_file, 'w') as f:
-            f.write(cpp_code)
+        # Write output file with error handling
+        try:
+            with open(output_file, 'w', encoding='utf-8') as f:
+                f.write(cpp_code)
+        except IOError as e:
+            print(f"Error writing output file '{output_file}': {e}", file=sys.stderr)
+            sys.exit(1)
         
         if args.verbose:
             print(f"Generated {output_file}")
+            print(f"File size: {len(cpp_code)} characters")
         else:
             print(f"Successfully compiled {args.input_file} -> {output_file}")
     
-    except FileNotFoundError:
-        print(f"Error: Input file '{args.input_file}' not found", file=sys.stderr)
+    except FileNotFoundError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+    except PermissionError as e:
+        print(f"Error: Permission denied - {e}", file=sys.stderr)
+        sys.exit(1)
+    except UnicodeDecodeError as e:
+        print(f"Error: Invalid file encoding - {e}", file=sys.stderr)
         sys.exit(1)
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
+        if args.verbose:
+            import traceback
+            traceback.print_exc()
         sys.exit(1)
 
 
