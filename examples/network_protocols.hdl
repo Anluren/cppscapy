@@ -1,0 +1,98 @@
+// Network Protocol Headers Definition
+// This file defines common network protocol headers using HDL syntax
+
+// Common enums
+enum EtherType : uint16_t {
+    IPv4 = 0x0800,
+    IPv6 = 0x86DD,
+    ARP = 0x0806,
+    MPLS = 0x8847,
+    VLAN = 0x8100
+}
+
+enum IPProtocol : uint8_t {
+    ICMP = 1,
+    TCP = 6,
+    UDP = 17,
+    OSPF = 89
+}
+
+// Ethernet Header (14 bytes)
+header EthernetHeader {
+    dst_mac: 48;
+    src_mac: 48;
+    ethertype: EtherType;
+}
+
+// IPv4 Header (20-60 bytes)
+header IPv4Header {
+    version: 4 = 4;
+    ihl: 4 = 5;
+    tos: 8;
+    total_length: 16 [computed];
+    identification: 16;
+    reserved: 1 = 0;
+    dont_fragment: 1;
+    more_fragments: 1;
+    fragment_offset: 13;
+    ttl: 8 = 64;
+    protocol: IPProtocol;
+    header_checksum: 16 [computed];
+    src_ip: 32;
+    dst_ip: 32;
+}
+
+// UDP Header (8 bytes)
+header UDPHeader {
+    src_port: 16;
+    dst_port: 16;
+    length: 16 [computed];
+    checksum: 16 [computed];
+}
+
+// TCP Header (20-60 bytes)
+header TCPHeader {
+    src_port: 16;
+    dst_port: 16;
+    seq_num: 32;
+    ack_num: 32;
+    data_offset: 4 = 5;
+    reserved: 3 = 0;
+    flag_ns: 1;
+    flag_cwr: 1;
+    flag_ece: 1;
+    flag_urg: 1;
+    flag_ack: 1;
+    flag_psh: 1;
+    flag_rst: 1;
+    flag_syn: 1;
+    flag_fin: 1;
+    window_size: 16;
+    checksum: 16 [computed];
+    urgent_ptr: 16;
+}
+
+// ICMP Header (8+ bytes)
+header ICMPHeader {
+    type: 8;
+    code: 8;
+    checksum: 16 [computed];
+    identifier: 16;
+    sequence: 16;
+}
+
+// MPLS Header (4 bytes)
+header MPLSHeader [stackable] {
+    label: 20;
+    traffic_class: 3;
+    bottom_of_stack: 1;
+    ttl: 8;
+}
+
+// VLAN Header (4 bytes)
+header VLANHeader [stackable] {
+    tpid: 16 = 0x8100;
+    priority: 3;
+    cfi: 1;
+    vlan_id: 12;
+}
