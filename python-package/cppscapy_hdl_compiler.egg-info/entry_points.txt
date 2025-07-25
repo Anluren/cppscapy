@@ -1,0 +1,4 @@
+[console_scripts]
+hdl-compile = cppscapy.hdl_compiler:main
+hdl-convert = cppscapy.format_converter:main
+

@@ -1,0 +1,764 @@
+<network_protocols xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="network_protocols.xsd">
+    <!-- Converted from HDL format -->
+    <enum name="EtherType" underlying_type="uint16_t">
+        <value name="IPv4" value="0x0800"/>
+        <value name="IPv6" value="0x86DD"/>
+        <value name="ARP" value="0x0806"/>
+        <value name="MPLS" value="0x8847"/>
+        <value name="VLAN" value="0x8100"/>
+    </enum>
+    <enum name="IPProtocol" underlying_type="uint8_t">
+        <value name="ICMP" value="1"/>
+        <value name="IGMP" value="2"/>
+        <value name="TCP" value="6"/>
+        <value name="UDP" value="17"/>
+        <value name="GRE" value="47"/>
+        <value name="ESP" value="50"/>
+        <value name="AH" value="51"/>
+        <value name="ICMPv6" value="58"/>
+        <value name="OSPF" value="89"/>
+        <value name="SCTP" value="132"/>
+    </enum>
+    <enum name="ICMPType" underlying_type="uint8_t">
+        <value name="ECHO_REPLY" value="0"/>
+        <value name="DEST_UNREACHABLE" value="3"/>
+        <value name="SOURCE_QUENCH" value="4"/>
+        <value name="REDIRECT" value="5"/>
+        <value name="ECHO_REQUEST" value="8"/>
+        <value name="TIME_EXCEEDED" value="11"/>
+        <value name="PARAMETER_PROBLEM" value="12"/>
+        <value name="TIMESTAMP_REQUEST" value="13"/>
+        <value name="TIMESTAMP_REPLY" value="14"/>
+    </enum>
+    <enum name="DHCPMessageType" underlying_type="uint8_t">
+        <value name="BOOTREQUEST" value="1"/>
+        <value name="BOOTREPLY" value="2"/>
+    </enum>
+    <header name="EthernetHeader">
+        <description>Generated EthernetHeader protocol header</description>
+        <field name="dst_mac" bit_width="48" type="integer">
+            <description>Dst Mac field</description>
+        </field>
+        <field name="src_mac" bit_width="48" type="integer">
+            <description>Src Mac field</description>
+        </field>
+        <field name="ethertype" bit_width="16" type="enum" enum_type="EtherType">
+            <description>Ethertype field</description>
+        </field>
+    </header>
+    <header name="IPv4Header">
+        <description>Generated IPv4Header protocol header</description>
+        <field name="version" bit_width="4" type="integer" default="4">
+            <description>Version field</description>
+        </field>
+        <field name="ihl" bit_width="4" type="integer" default="5">
+            <description>Ihl field</description>
+        </field>
+        <field name="tos" bit_width="8" type="integer">
+            <description>Tos field</description>
+        </field>
+        <field name="total_length" bit_width="16" type="integer">
+            <description>Total Length field</description>
+            <attributes>
+                <attribute>computed</attribute>
+            </attributes>
+        </field>
+        <field name="identification" bit_width="16" type="integer">
+            <description>Identification field</description>
+        </field>
+        <field name="reserved" bit_width="1" type="integer" default="0">
+            <description>Reserved field</description>
+        </field>
+        <field name="dont_fragment" bit_width="1" type="integer">
+            <description>Dont Fragment field</description>
+        </field>
+        <field name="more_fragments" bit_width="1" type="integer">
+            <description>More Fragments field</description>
+        </field>
+        <field name="fragment_offset" bit_width="13" type="integer">
+            <description>Fragment Offset field</description>
+        </field>
+        <field name="ttl" bit_width="8" type="integer" default="64">
+            <description>Ttl field</description>
+        </field>
+        <field name="protocol" bit_width="8" type="enum" enum_type="IPProtocol">
+            <description>Protocol field</description>
+        </field>
+        <field name="header_checksum" bit_width="16" type="integer">
+            <description>Header Checksum field</description>
+            <attributes>
+                <attribute>computed</attribute>
+            </attributes>
+        </field>
+        <field name="src_ip" bit_width="32" type="integer">
+            <description>Src Ip field</description>
+        </field>
+        <field name="dst_ip" bit_width="32" type="integer">
+            <description>Dst Ip field</description>
+        </field>
+    </header>
+    <header name="UDPHeader">
+        <description>Generated UDPHeader protocol header</description>
+        <field name="src_port" bit_width="16" type="integer">
+            <description>Src Port field</description>
+        </field>
+        <field name="dst_port" bit_width="16" type="integer">
+            <description>Dst Port field</description>
+        </field>
+        <field name="length" bit_width="16" type="integer">
+            <description>Length field</description>
+            <attributes>
+                <attribute>computed</attribute>
+            </attributes>
+        </field>
+        <field name="checksum" bit_width="16" type="integer">
+            <description>Checksum field</description>
+            <attributes>
+                <attribute>computed</attribute>
+            </attributes>
+        </field>
+    </header>
+    <header name="TCPHeader">
+        <description>Generated TCPHeader protocol header</description>
+        <field name="src_port" bit_width="16" type="integer">
+            <description>Src Port field</description>
+        </field>
+        <field name="dst_port" bit_width="16" type="integer">
+            <description>Dst Port field</description>
+        </field>
+        <field name="seq_num" bit_width="32" type="integer">
+            <description>Seq Num field</description>
+        </field>
+        <field name="ack_num" bit_width="32" type="integer">
+            <description>Ack Num field</description>
+        </field>
+        <field name="data_offset" bit_width="4" type="integer" default="5">
+            <description>Data Offset field</description>
+        </field>
+        <field name="reserved" bit_width="3" type="integer" default="0">
+            <description>Reserved field</description>
+        </field>
+        <field name="flag_ns" bit_width="1" type="integer">
+            <description>Flag Ns field</description>
+        </field>
+        <field name="flag_cwr" bit_width="1" type="integer">
+            <description>Flag Cwr field</description>
+        </field>
+        <field name="flag_ece" bit_width="1" type="integer">
+            <description>Flag Ece field</description>
+        </field>
+        <field name="flag_urg" bit_width="1" type="integer">
+            <description>Flag Urg field</description>
+        </field>
+        <field name="flag_ack" bit_width="1" type="integer">
+            <description>Flag Ack field</description>
+        </field>
+        <field name="flag_psh" bit_width="1" type="integer">
+            <description>Flag Psh field</description>
+        </field>
+        <field name="flag_rst" bit_width="1" type="integer">
+            <description>Flag Rst field</description>
+        </field>
+        <field name="flag_syn" bit_width="1" type="integer">
+            <description>Flag Syn field</description>
+        </field>
+        <field name="flag_fin" bit_width="1" type="integer">
+            <description>Flag Fin field</description>
+        </field>
+        <field name="window_size" bit_width="16" type="integer">
+            <description>Window Size field</description>
+        </field>
+        <field name="checksum" bit_width="16" type="integer">
+            <description>Checksum field</description>
+            <attributes>
+                <attribute>computed</attribute>
+            </attributes>
+        </field>
+        <field name="urgent_ptr" bit_width="16" type="integer">
+            <description>Urgent Ptr field</description>
+        </field>
+    </header>
+    <header name="ICMPHeader">
+        <description>Generated ICMPHeader protocol header</description>
+        <field name="type" bit_width="8" type="enum" enum_type="ICMPType">
+            <description>Type field</description>
+        </field>
+        <field name="code" bit_width="8" type="integer">
+            <description>Code field</description>
+        </field>
+        <field name="checksum" bit_width="16" type="integer">
+            <description>Checksum field</description>
+            <attributes>
+                <attribute>computed</attribute>
+            </attributes>
+        </field>
+        <field name="identifier" bit_width="16" type="integer">
+            <description>Identifier field</description>
+        </field>
+        <field name="sequence" bit_width="16" type="integer">
+            <description>Sequence field</description>
+        </field>
+    </header>
+    <header name="IPv6Header">
+        <description>Generated IPv6Header protocol header</description>
+        <field name="version" bit_width="4" type="integer" default="6">
+            <description>Version field</description>
+        </field>
+        <field name="traffic_class" bit_width="8" type="integer">
+            <description>Traffic Class field</description>
+        </field>
+        <field name="flow_label" bit_width="20" type="integer">
+            <description>Flow Label field</description>
+        </field>
+        <field name="payload_length" bit_width="16" type="integer">
+            <description>Payload Length field</description>
+            <attributes>
+                <attribute>computed</attribute>
+            </attributes>
+        </field>
+        <field name="next_header" bit_width="8" type="enum" enum_type="IPProtocol">
+            <description>Next Header field</description>
+        </field>
+        <field name="hop_limit" bit_width="8" type="integer" default="64">
+            <description>Hop Limit field</description>
+        </field>
+        <field name="src_addr" bit_width="128" type="integer">
+            <description>Src Addr field</description>
+        </field>
+        <field name="dst_addr" bit_width="128" type="integer">
+            <description>Dst Addr field</description>
+        </field>
+    </header>
+    <header name="ARPHeader">
+        <description>Generated ARPHeader protocol header</description>
+        <field name="hardware_type" bit_width="16" type="integer" default="1">
+            <description>Hardware Type field</description>
+        </field>
+        <field name="protocol_type" bit_width="16" type="integer" default="0x0800">
+            <description>Protocol Type field</description>
+        </field>
+        <field name="hardware_addr_len" bit_width="8" type="integer" default="6">
+            <description>Hardware Addr Len field</description>
+        </field>
+        <field name="protocol_addr_len" bit_width="8" type="integer" default="4">
+            <description>Protocol Addr Len field</description>
+        </field>
+        <field name="operation" bit_width="16" type="integer">
+            <description>Operation field</description>
+        </field>
+        <field name="sender_hw_addr" bit_width="48" type="integer">
+            <description>Sender Hw Addr field</description>
+        </field>
+        <field name="sender_proto_addr" bit_width="32" type="integer">
+            <description>Sender Proto Addr field</description>
+        </field>
+        <field name="target_hw_addr" bit_width="48" type="integer">
+            <description>Target Hw Addr field</description>
+        </field>
+        <field name="target_proto_addr" bit_width="32" type="integer">
+            <description>Target Proto Addr field</description>
+        </field>
+    </header>
+    <header name="DNSHeader">
+        <description>Generated DNSHeader protocol header</description>
+        <field name="id" bit_width="16" type="integer">
+            <description>Id field</description>
+        </field>
+        <field name="flags" bit_width="16 {
+        qr: 1" type="integer">
+            <description>Flags field</description>
+        </field>
+        <field name="opcode" bit_width="4" type="integer">
+            <description>Opcode field</description>
+        </field>
+        <field name="aa" bit_width="1" type="integer">
+            <description>Aa field</description>
+        </field>
+        <field name="tc" bit_width="1" type="integer">
+            <description>Tc field</description>
+        </field>
+        <field name="rd" bit_width="1" type="integer">
+            <description>Rd field</description>
+        </field>
+        <field name="ra" bit_width="1" type="integer">
+            <description>Ra field</description>
+        </field>
+        <field name="z" bit_width="3" type="integer" default="0">
+            <description>Z field</description>
+        </field>
+        <field name="rcode" bit_width="4" type="integer">
+            <description>Rcode field</description>
+        </field>
+    </header>
+    <header name="DHCPHeader">
+        <description>Generated DHCPHeader protocol header</description>
+        <field name="op" bit_width="8" type="enum" enum_type="DHCPMessageType">
+            <description>Op field</description>
+        </field>
+        <field name="htype" bit_width="8" type="integer" default="1">
+            <description>Htype field</description>
+        </field>
+        <field name="hlen" bit_width="8" type="integer" default="6">
+            <description>Hlen field</description>
+        </field>
+        <field name="hops" bit_width="8" type="integer" default="0">
+            <description>Hops field</description>
+        </field>
+        <field name="xid" bit_width="32" type="integer">
+            <description>Xid field</description>
+        </field>
+        <field name="secs" bit_width="16" type="integer">
+            <description>Secs field</description>
+        </field>
+        <field name="flags" bit_width="16" type="integer">
+            <description>Flags field</description>
+        </field>
+        <field name="ciaddr" bit_width="32" type="integer">
+            <description>Ciaddr field</description>
+        </field>
+        <field name="yiaddr" bit_width="32" type="integer">
+            <description>Yiaddr field</description>
+        </field>
+        <field name="siaddr" bit_width="32" type="integer">
+            <description>Siaddr field</description>
+        </field>
+        <field name="giaddr" bit_width="32" type="integer">
+            <description>Giaddr field</description>
+        </field>
+        <field name="chaddr" bit_width="128" type="integer">
+            <description>Chaddr field</description>
+        </field>
+        <field name="sname" bit_width="512" type="integer">
+            <description>Sname field</description>
+        </field>
+        <field name="file" bit_width="1024" type="integer">
+            <description>File field</description>
+        </field>
+        <field name="magic_cookie" bit_width="32" type="integer" default="0x63825363">
+            <description>Magic Cookie field</description>
+        </field>
+    </header>
+    <header name="GREHeader">
+        <description>Generated GREHeader protocol header</description>
+        <field name="checksum_present" bit_width="1" type="integer">
+            <description>Checksum Present field</description>
+        </field>
+        <field name="routing_present" bit_width="1" type="integer">
+            <description>Routing Present field</description>
+        </field>
+        <field name="key_present" bit_width="1" type="integer">
+            <description>Key Present field</description>
+        </field>
+        <field name="sequence_present" bit_width="1" type="integer">
+            <description>Sequence Present field</description>
+        </field>
+        <field name="strict_source_route" bit_width="1" type="integer">
+            <description>Strict Source Route field</description>
+        </field>
+        <field name="recursion_control" bit_width="3" type="integer">
+            <description>Recursion Control field</description>
+        </field>
+        <field name="ack_present" bit_width="1" type="integer">
+            <description>Ack Present field</description>
+        </field>
+        <field name="flags" bit_width="4" type="integer" default="0">
+            <description>Flags field</description>
+        </field>
+        <field name="version" bit_width="3" type="integer" default="0">
+            <description>Version field</description>
+        </field>
+        <field name="protocol_type" bit_width="16" type="integer">
+            <description>Protocol Type field</description>
+        </field>
+    </header>
+    <header name="PPPoEHeader">
+        <description>Generated PPPoEHeader protocol header</description>
+        <field name="version" bit_width="4" type="integer" default="1">
+            <description>Version field</description>
+        </field>
+        <field name="type" bit_width="4" type="integer" default="1">
+            <description>Type field</description>
+        </field>
+        <field name="code" bit_width="8" type="integer">
+            <description>Code field</description>
+        </field>
+        <field name="session_id" bit_width="16" type="integer">
+            <description>Session Id field</description>
+        </field>
+        <field name="length" bit_width="16" type="integer">
+            <description>Length field</description>
+        </field>
+    </header>
+    <header name="L2TPHeader">
+        <description>Generated L2TPHeader protocol header</description>
+        <field name="type" bit_width="1" type="integer">
+            <description>Type field</description>
+        </field>
+        <field name="length_present" bit_width="1" type="integer">
+            <description>Length Present field</description>
+        </field>
+        <field name="reserved" bit_width="2" type="integer" default="0">
+            <description>Reserved field</description>
+        </field>
+        <field name="sequence_present" bit_width="1" type="integer">
+            <description>Sequence Present field</description>
+        </field>
+        <field name="reserved2" bit_width="1" type="integer" default="0">
+            <description>Reserved2 field</description>
+        </field>
+        <field name="offset_present" bit_width="1" type="integer">
+            <description>Offset Present field</description>
+        </field>
+        <field name="priority" bit_width="1" type="integer">
+            <description>Priority field</description>
+        </field>
+        <field name="reserved3" bit_width="4" type="integer" default="0">
+            <description>Reserved3 field</description>
+        </field>
+        <field name="version" bit_width="4" type="integer" default="2">
+            <description>Version field</description>
+        </field>
+        <field name="length" bit_width="16" type="integer">
+            <description>Length field</description>
+        </field>
+        <field name="tunnel_id" bit_width="16" type="integer">
+            <description>Tunnel Id field</description>
+        </field>
+        <field name="session_id" bit_width="16" type="integer">
+            <description>Session Id field</description>
+        </field>
+    </header>
+    <header name="VXLANHeader">
+        <description>Generated VXLANHeader protocol header</description>
+        <field name="flags" bit_width="8" type="integer" default="8">
+            <description>Flags field</description>
+        </field>
+        <field name="reserved1" bit_width="24" type="integer" default="0">
+            <description>Reserved1 field</description>
+        </field>
+        <field name="vni" bit_width="24" type="integer">
+            <description>Vni field</description>
+        </field>
+        <field name="reserved2" bit_width="8" type="integer" default="0">
+            <description>Reserved2 field</description>
+        </field>
+    </header>
+    <header name="GENEVEHeader">
+        <description>Generated GENEVEHeader protocol header</description>
+        <field name="version" bit_width="2" type="integer" default="0">
+            <description>Version field</description>
+        </field>
+        <field name="opt_len" bit_width="6" type="integer">
+            <description>Opt Len field</description>
+        </field>
+        <field name="oam" bit_width="1" type="integer">
+            <description>Oam field</description>
+        </field>
+        <field name="critical" bit_width="1" type="integer">
+            <description>Critical field</description>
+        </field>
+        <field name="reserved" bit_width="6" type="integer" default="0">
+            <description>Reserved field</description>
+        </field>
+        <field name="protocol_type" bit_width="16" type="integer">
+            <description>Protocol Type field</description>
+        </field>
+        <field name="vni" bit_width="24" type="integer">
+            <description>Vni field</description>
+        </field>
+        <field name="reserved2" bit_width="8" type="integer" default="0">
+            <description>Reserved2 field</description>
+        </field>
+    </header>
+    <header name="NVGREHeader">
+        <description>Generated NVGREHeader protocol header</description>
+        <field name="checksum_present" bit_width="1" type="integer" default="0">
+            <description>Checksum Present field</description>
+        </field>
+        <field name="routing_present" bit_width="1" type="integer" default="0">
+            <description>Routing Present field</description>
+        </field>
+        <field name="key_present" bit_width="1" type="integer" default="1">
+            <description>Key Present field</description>
+        </field>
+        <field name="sequence_present" bit_width="1" type="integer" default="0">
+            <description>Sequence Present field</description>
+        </field>
+        <field name="strict_source_route" bit_width="1" type="integer" default="0">
+            <description>Strict Source Route field</description>
+        </field>
+        <field name="recursion_control" bit_width="3" type="integer" default="0">
+            <description>Recursion Control field</description>
+        </field>
+        <field name="ack_present" bit_width="1" type="integer" default="0">
+            <description>Ack Present field</description>
+        </field>
+        <field name="flags" bit_width="4" type="integer" default="0">
+            <description>Flags field</description>
+        </field>
+        <field name="version" bit_width="3" type="integer" default="0">
+            <description>Version field</description>
+        </field>
+        <field name="protocol_type" bit_width="16" type="integer" default="0x6558">
+            <description>Protocol Type field</description>
+        </field>
+        <field name="vsid" bit_width="24" type="integer">
+            <description>Vsid field</description>
+        </field>
+        <field name="flow_id" bit_width="8" type="integer">
+            <description>Flow Id field</description>
+        </field>
+    </header>
+    <header name="SCTPHeader">
+        <description>Generated SCTPHeader protocol header</description>
+        <field name="src_port" bit_width="16" type="integer">
+            <description>Src Port field</description>
+        </field>
+        <field name="dst_port" bit_width="16" type="integer">
+            <description>Dst Port field</description>
+        </field>
+        <field name="verification_tag" bit_width="32" type="integer">
+            <description>Verification Tag field</description>
+        </field>
+        <field name="checksum" bit_width="32" type="integer">
+            <description>Checksum field</description>
+            <attributes>
+                <attribute>computed</attribute>
+            </attributes>
+        </field>
+    </header>
+    <header name="ESPHeader">
+        <description>Generated ESPHeader protocol header</description>
+        <field name="spi" bit_width="32" type="integer">
+            <description>Spi field</description>
+        </field>
+        <field name="sequence" bit_width="32" type="integer">
+            <description>Sequence field</description>
+        </field>
+    </header>
+    <header name="AHHeader">
+        <description>Generated AHHeader protocol header</description>
+        <field name="next_header" bit_width="8" type="enum" enum_type="IPProtocol">
+            <description>Next Header field</description>
+        </field>
+        <field name="payload_len" bit_width="8" type="integer">
+            <description>Payload Len field</description>
+        </field>
+        <field name="reserved" bit_width="16" type="integer" default="0">
+            <description>Reserved field</description>
+        </field>
+        <field name="spi" bit_width="32" type="integer">
+            <description>Spi field</description>
+        </field>
+        <field name="sequence" bit_width="32" type="integer">
+            <description>Sequence field</description>
+        </field>
+    </header>
+    <header name="IGMPHeader">
+        <description>Generated IGMPHeader protocol header</description>
+        <field name="type" bit_width="8" type="integer">
+            <description>Type field</description>
+        </field>
+        <field name="max_resp_time" bit_width="8" type="integer">
+            <description>Max Resp Time field</description>
+        </field>
+        <field name="checksum" bit_width="16" type="integer">
+            <description>Checksum field</description>
+            <attributes>
+                <attribute>computed</attribute>
+            </attributes>
+        </field>
+        <field name="group_address" bit_width="32" type="integer">
+            <description>Group Address field</description>
+        </field>
+    </header>
+    <header name="OSPFHeader">
+        <description>Generated OSPFHeader protocol header</description>
+        <field name="version" bit_width="8" type="integer" default="2">
+            <description>Version field</description>
+        </field>
+        <field name="type" bit_width="8" type="integer">
+            <description>Type field</description>
+        </field>
+        <field name="length" bit_width="16" type="integer">
+            <description>Length field</description>
+        </field>
+        <field name="router_id" bit_width="32" type="integer">
+            <description>Router Id field</description>
+        </field>
+        <field name="area_id" bit_width="32" type="integer">
+            <description>Area Id field</description>
+        </field>
+        <field name="checksum" bit_width="16" type="integer">
+            <description>Checksum field</description>
+            <attributes>
+                <attribute>computed</attribute>
+            </attributes>
+        </field>
+        <field name="auth_type" bit_width="16" type="integer">
+            <description>Auth Type field</description>
+        </field>
+        <field name="authentication" bit_width="64" type="integer">
+            <description>Authentication field</description>
+        </field>
+    </header>
+    <header name="RIPHeader">
+        <description>Generated RIPHeader protocol header</description>
+        <field name="command" bit_width="8" type="integer">
+            <description>Command field</description>
+        </field>
+        <field name="version" bit_width="8" type="integer" default="2">
+            <description>Version field</description>
+        </field>
+        <field name="reserved" bit_width="16" type="integer" default="0">
+            <description>Reserved field</description>
+        </field>
+    </header>
+    <header name="HSRPHeader">
+        <description>Generated HSRPHeader protocol header</description>
+        <field name="version" bit_width="8" type="integer" default="0">
+            <description>Version field</description>
+        </field>
+        <field name="opcode" bit_width="8" type="integer">
+            <description>Opcode field</description>
+        </field>
+        <field name="state" bit_width="8" type="integer">
+            <description>State field</description>
+        </field>
+        <field name="hello_time" bit_width="8" type="integer">
+            <description>Hello Time field</description>
+        </field>
+        <field name="hold_time" bit_width="8" type="integer">
+            <description>Hold Time field</description>
+        </field>
+        <field name="priority" bit_width="8" type="integer">
+            <description>Priority field</description>
+        </field>
+        <field name="group" bit_width="8" type="integer">
+            <description>Group field</description>
+        </field>
+        <field name="reserved" bit_width="8" type="integer" default="0">
+            <description>Reserved field</description>
+        </field>
+        <field name="auth_data" bit_width="64" type="integer">
+            <description>Auth Data field</description>
+        </field>
+        <field name="virtual_ip" bit_width="32" type="integer">
+            <description>Virtual Ip field</description>
+        </field>
+    </header>
+    <header name="LACPHeader">
+        <description>Generated LACPHeader protocol header</description>
+        <field name="subtype" bit_width="8" type="integer" default="1">
+            <description>Subtype field</description>
+        </field>
+        <field name="version_number" bit_width="8" type="integer" default="1">
+            <description>Version Number field</description>
+        </field>
+        <field name="actor_type" bit_width="8" type="integer" default="1">
+            <description>Actor Type field</description>
+        </field>
+        <field name="actor_info_len" bit_width="8" type="integer" default="20">
+            <description>Actor Info Len field</description>
+        </field>
+        <field name="actor_sys_priority" bit_width="16" type="integer">
+            <description>Actor Sys Priority field</description>
+        </field>
+        <field name="actor_system" bit_width="48" type="integer">
+            <description>Actor System field</description>
+        </field>
+        <field name="actor_key" bit_width="16" type="integer">
+            <description>Actor Key field</description>
+        </field>
+        <field name="actor_port_priority" bit_width="16" type="integer">
+            <description>Actor Port Priority field</description>
+        </field>
+        <field name="actor_port" bit_width="16" type="integer">
+            <description>Actor Port field</description>
+        </field>
+        <field name="actor_state" bit_width="8" type="integer">
+            <description>Actor State field</description>
+        </field>
+        <field name="reserved1" bit_width="24" type="integer" default="0">
+            <description>Reserved1 field</description>
+        </field>
+        <field name="partner_type" bit_width="8" type="integer" default="2">
+            <description>Partner Type field</description>
+        </field>
+        <field name="partner_info_len" bit_width="8" type="integer" default="20">
+            <description>Partner Info Len field</description>
+        </field>
+        <field name="partner_sys_priority" bit_width="16" type="integer">
+            <description>Partner Sys Priority field</description>
+        </field>
+        <field name="partner_system" bit_width="48" type="integer">
+            <description>Partner System field</description>
+        </field>
+        <field name="partner_key" bit_width="16" type="integer">
+            <description>Partner Key field</description>
+        </field>
+        <field name="partner_port_priority" bit_width="16" type="integer">
+            <description>Partner Port Priority field</description>
+        </field>
+        <field name="partner_port" bit_width="16" type="integer">
+            <description>Partner Port field</description>
+        </field>
+        <field name="partner_state" bit_width="8" type="integer">
+            <description>Partner State field</description>
+        </field>
+        <field name="reserved2" bit_width="24" type="integer" default="0">
+            <description>Reserved2 field</description>
+        </field>
+        <field name="collector_type" bit_width="8" type="integer" default="3">
+            <description>Collector Type field</description>
+        </field>
+        <field name="collector_info_len" bit_width="8" type="integer" default="16">
+            <description>Collector Info Len field</description>
+        </field>
+        <field name="collector_max_delay" bit_width="16" type="integer">
+            <description>Collector Max Delay field</description>
+        </field>
+        <field name="reserved3" bit_width="96" type="integer" default="0">
+            <description>Reserved3 field</description>
+        </field>
+        <field name="terminator_type" bit_width="8" type="integer" default="0">
+            <description>Terminator Type field</description>
+        </field>
+        <field name="terminator_len" bit_width="8" type="integer" default="0">
+            <description>Terminator Len field</description>
+        </field>
+        <field name="reserved4" bit_width="400" type="integer" default="0">
+            <description>Reserved4 field</description>
+        </field>
+    </header>
+    <header name="MPLSHeader">
+        <description>Generated MPLSHeader protocol header</description>
+        <field name="label" bit_width="20" type="integer">
+            <description>Label field</description>
+        </field>
+        <field name="traffic_class" bit_width="3" type="integer">
+            <description>Traffic Class field</description>
+        </field>
+        <field name="bottom_of_stack" bit_width="1" type="integer">
+            <description>Bottom Of Stack field</description>
+        </field>
+        <field name="ttl" bit_width="8" type="integer">
+            <description>Ttl field</description>
+        </field>
+    </header>
+    <header name="VLANHeader">
+        <description>Generated VLANHeader protocol header</description>
+        <field name="tpid" bit_width="16" type="integer" default="0x8100">
+            <description>Tpid field</description>
+        </field>
+        <field name="priority" bit_width="3" type="integer">
+            <description>Priority field</description>
+        </field>
+        <field name="cfi" bit_width="1" type="integer">
+            <description>Cfi field</description>
+        </field>
+        <field name="vlan_id" bit_width="12" type="integer">
+            <description>Vlan Id field</description>
+        </field>
+    </header>
+</network_protocols>

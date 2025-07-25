@@ -1,0 +1,17 @@
+# CPPScapy HDL Compiler Requirements
+# 
+# This package uses only Python standard library modules,
+# so no external dependencies are required.
+#
+# The package works with Python 3.7+ and uses:
+# - argparse (standard library)
+# - xml.etree.ElementTree (standard library) 
+# - pathlib (standard library)
+# - re (standard library)
+# - typing (standard library)
+
+# Development dependencies (optional)
+# pytest>=6.0.0
+# black>=21.0.0
+# flake8>=3.8.0
+# mypy>=0.800

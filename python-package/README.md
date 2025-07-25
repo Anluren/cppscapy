@@ -1,0 +1,182 @@
+# CPPScapy HDL Compiler Python Package
+
+A Python package for compiling Hardware Description Language (HDL) and XML protocol definitions into C++ header files for network packet manipulation.
+
+## Features
+
+- **Dual Format Support**: Parse both HDL and XML protocol definitions
+- **C++ Code Generation**: Generate optimized C++ headers for network protocols
+- **Schema Validation**: XSD-based validation for XML protocol definitions  
+- **Bidirectional Conversion**: Convert between HDL and XML formats
+- **Command-line Tools**: Easy-to-use CLI tools for compilation and conversion
+- **Comprehensive Protocol Library**: 25+ pre-defined network protocol headers
+
+## Installation
+
+### From PyPI (when published)
+```bash
+pip install cppscapy-hdl-compiler
+```
+
+### From Source
+```bash
+git clone https://github.com/Anluren/cppscapy.git
+cd cppscapy/python-package
+pip install -e .
+```
+
+## Quick Start
+
+### Command Line Usage
+
+Compile HDL to C++ headers:
+```bash
+hdl-compile protocols.hdl -o protocols.h
+```
+
+Convert HDL to XML:
+```bash
+hdl-convert protocols.hdl -o protocols.xml
+```
+
+Convert XML to HDL:
+```bash
+hdl-convert protocols.xml -o protocols.hdl
+```
+
+### Python API Usage
+
+```python
+from cppscapy import HDLParser, XMLParser, CPPCodeGenerator, FormatConverter
+
+# Parse HDL file
+parser = HDLParser('protocols.hdl')
+headers, enums = parser.parse()
+
+# Generate C++ code
+generator = CPPCodeGenerator(headers, enums)
+cpp_code = generator.generate()
+
+# Save to file
+with open('protocols.h', 'w') as f:
+    f.write(cpp_code)
+
+# Convert formats
+converter = FormatConverter()
+converter.hdl_to_xml('input.hdl', 'output.xml')
+converter.xml_to_hdl('input.xml', 'output.hdl')
+```
+
+## Protocol Definition Formats
+
+### HDL Format
+```hdl
+// Simple and concise syntax
+header EthernetHeader {
+    dst_mac: 48;        // Destination MAC
+    src_mac: 48;        // Source MAC  
+    ethertype: EtherType; // EtherType enum
+}
+
+enum EtherType : uint16_t {
+    IPv4 = 0x0800;
+    IPv6 = 0x86DD;
+    ARP = 0x0806;
+}
+```
+
+### XML Format
+```xml
+<network_protocols>
+    <header name="EthernetHeader" description="Ethernet frame header">
+        <field name="dst_mac" bit_width="48" type="integer" description="Destination MAC"/>
+        <field name="src_mac" bit_width="48" type="integer" description="Source MAC"/>
+        <field name="ethertype" bit_width="16" type="enum" enum_type="EtherType" description="EtherType"/>
+    </header>
+    
+    <enum name="EtherType" underlying_type="uint16_t">
+        <value name="IPv4" value="0x0800"/>
+        <value name="IPv6" value="0x86DD"/>
+        <value name="ARP" value="0x0806"/>
+    </enum>
+</network_protocols>
+```
+
+## Supported Protocols
+
+The package includes definitions for 25+ network protocols:
+
+- **Layer 2**: Ethernet, VLAN, MPLS, LACP
+- **Layer 3**: IPv4, IPv6, ARP, ICMP, IGMP
+- **Layer 4**: TCP, UDP, SCTP
+- **Tunneling**: GRE, VXLAN, GENEVE, NVGRE, L2TP, PPPoE
+- **Security**: ESP, AH
+- **Routing**: OSPF, RIP, HSRP
+- **Application**: DNS, DHCP
+
+## Generated C++ Features
+
+The generated C++ headers provide:
+
+- **Bit-field Structures**: Efficient memory layout matching protocol specifications
+- **Constructors**: Default and parameterized constructors for easy instantiation
+- **Serialization**: Methods to convert structures to/from byte arrays
+- **Validation**: Built-in field validation and bounds checking
+- **Checksum Computation**: Automatic checksum calculation for protocols that require it
+- **Endianness Handling**: Proper network byte order conversion
+
+## Example Generated C++ Code
+
+```cpp
+struct EthernetHeader {
+    uint64_t dst_mac : 48;
+    uint64_t src_mac : 48; 
+    uint16_t ethertype : 16;
+    
+    EthernetHeader() : dst_mac(0), src_mac(0), ethertype(0) {}
+    
+    EthernetHeader(uint64_t dst_mac, uint64_t src_mac, uint16_t ethertype)
+        : dst_mac(dst_mac), src_mac(src_mac), ethertype(ethertype) {}
+        
+    void serialize(uint8_t* buffer) const;
+    void deserialize(const uint8_t* buffer);
+    bool validate() const;
+} __attribute__((packed));
+```
+
+## Requirements
+
+- Python 3.7+
+- Standard library modules only (no external dependencies)
+
+## Development
+
+### Running Tests
+```bash
+cd python-package
+python -m pytest tests/
+```
+
+### Building Package
+```bash
+cd python-package  
+python setup.py sdist bdist_wheel
+```
+
+## License
+
+MIT License - see LICENSE file for details.
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Submit a pull request
+
+## Support
+
+- **Issues**: [GitHub Issues](https://github.com/Anluren/cppscapy/issues)
+- **Documentation**: [Project README](https://github.com/Anluren/cppscapy)
+- **Source**: [GitHub Repository](https://github.com/Anluren/cppscapy)

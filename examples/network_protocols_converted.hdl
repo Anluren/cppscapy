@@ -1,0 +1,326 @@
+// Converted from XML format
+// Network Protocol Headers Definition
+
+enum EtherType : uint16_t {
+    IPv4 = 0x0800,
+    IPv6 = 0x86DD,
+    ARP = 0x0806,
+    MPLS = 0x8847,
+    VLAN = 0x8100,
+}
+
+enum IPProtocol : uint8_t {
+    ICMP = 1,
+    IGMP = 2,
+    TCP = 6,
+    UDP = 17,
+    GRE = 47,
+    ESP = 50,
+    AH = 51,
+    ICMPv6 = 58,
+    OSPF = 89,
+    SCTP = 132,
+}
+
+enum ICMPType : uint8_t {
+    ECHO_REPLY = 0,
+    DEST_UNREACHABLE = 3,
+    SOURCE_QUENCH = 4,
+    REDIRECT = 5,
+    ECHO_REQUEST = 8,
+    TIME_EXCEEDED = 11,
+    PARAMETER_PROBLEM = 12,
+    TIMESTAMP_REQUEST = 13,
+    TIMESTAMP_REPLY = 14,
+}
+
+enum DHCPMessageType : uint8_t {
+    BOOTREQUEST = 1,
+    BOOTREPLY = 2,
+}
+
+header EthernetHeader {
+    dst_mac: 48;
+    src_mac: 48;
+    ethertype: EtherType;
+}
+
+header IPv4Header {
+    version: 4 = 4;
+    ihl: 4 = 5;
+    tos: 8;
+    total_length: 16 [computed];
+    identification: 16;
+    reserved: 1 = 0;
+    dont_fragment: 1;
+    more_fragments: 1;
+    fragment_offset: 13;
+    ttl: 8 = 64;
+    protocol: IPProtocol;
+    header_checksum: 16 [computed];
+    src_ip: 32;
+    dst_ip: 32;
+}
+
+header UDPHeader {
+    src_port: 16;
+    dst_port: 16;
+    length: 16 [computed];
+    checksum: 16 [computed];
+}
+
+header TCPHeader {
+    src_port: 16;
+    dst_port: 16;
+    seq_num: 32;
+    ack_num: 32;
+    data_offset: 4 = 5;
+    reserved: 3 = 0;
+    flag_ns: 1;
+    flag_cwr: 1;
+    flag_ece: 1;
+    flag_urg: 1;
+    flag_ack: 1;
+    flag_psh: 1;
+    flag_rst: 1;
+    flag_syn: 1;
+    flag_fin: 1;
+    window_size: 16;
+    checksum: 16 [computed];
+    urgent_ptr: 16;
+}
+
+header ICMPHeader {
+    type: ICMPType;
+    code: 8;
+    checksum: 16 [computed];
+    identifier: 16;
+    sequence: 16;
+}
+
+header IPv6Header {
+    version: 4 = 6;
+    traffic_class: 8;
+    flow_label: 20;
+    payload_length: 16 [computed];
+    next_header: IPProtocol;
+    hop_limit: 8 = 64;
+    src_addr: 128;
+    dst_addr: 128;
+}
+
+header ARPHeader {
+    hardware_type: 16 = 1;
+    protocol_type: 16 = 0x0800;
+    hardware_addr_len: 8 = 6;
+    protocol_addr_len: 8 = 4;
+    operation: 16;
+    sender_hw_addr: 48;
+    sender_proto_addr: 32;
+    target_hw_addr: 48;
+    target_proto_addr: 32;
+}
+
+header DNSHeader {
+    id: 16;
+    qr: 1;
+    opcode: 4;
+    aa: 1;
+    tc: 1;
+    rd: 1;
+    ra: 1;
+    z: 3 = 0;
+    rcode: 4;
+    qdcount: 16;
+    ancount: 16;
+    nscount: 16;
+    arcount: 16;
+}
+
+header DHCPHeader {
+    op: DHCPMessageType;
+    htype: 8 = 1;
+    hlen: 8 = 6;
+    hops: 8 = 0;
+    xid: 32;
+    secs: 16;
+    flags: 16;
+    ciaddr: 32;
+    yiaddr: 32;
+    siaddr: 32;
+    giaddr: 32;
+    chaddr: 128;
+    sname: 512;
+    file: 1024;
+    magic_cookie: 32 = 0x63825363;
+}
+
+header GREHeader {
+    checksum_present: 1;
+    routing_present: 1;
+    key_present: 1;
+    sequence_present: 1;
+    strict_source_route: 1;
+    recursion_control: 3;
+    ack_present: 1;
+    flags: 4 = 0;
+    version: 3 = 0;
+    protocol_type: 16;
+}
+
+header PPPoEHeader {
+    version: 4 = 1;
+    type: 4 = 1;
+    code: 8;
+    session_id: 16;
+    length: 16;
+}
+
+header L2TPHeader {
+    type: 1;
+    length_present: 1;
+    reserved: 2 = 0;
+    sequence_present: 1;
+    reserved2: 1 = 0;
+    offset_present: 1;
+    priority: 1;
+    reserved3: 4 = 0;
+    version: 4 = 2;
+    length: 16;
+    tunnel_id: 16;
+    session_id: 16;
+}
+
+header VXLANHeader {
+    flags: 8 = 8;
+    reserved1: 24 = 0;
+    vni: 24;
+    reserved2: 8 = 0;
+}
+
+header GENEVEHeader {
+    version: 2 = 0;
+    opt_len: 6;
+    oam: 1;
+    critical: 1;
+    reserved: 6 = 0;
+    protocol_type: 16;
+    vni: 24;
+    reserved2: 8 = 0;
+}
+
+header NVGREHeader {
+    checksum_present: 1 = 0;
+    routing_present: 1 = 0;
+    key_present: 1 = 1;
+    sequence_present: 1 = 0;
+    strict_source_route: 1 = 0;
+    recursion_control: 3 = 0;
+    ack_present: 1 = 0;
+    flags: 4 = 0;
+    version: 3 = 0;
+    protocol_type: 16 = 0x6558;
+    vsid: 24;
+    flow_id: 8;
+}
+
+header SCTPHeader {
+    src_port: 16;
+    dst_port: 16;
+    verification_tag: 32;
+    checksum: 32 [computed];
+}
+
+header ESPHeader {
+    spi: 32;
+    sequence: 32;
+}
+
+header AHHeader {
+    next_header: IPProtocol;
+    payload_len: 8;
+    reserved: 16 = 0;
+    spi: 32;
+    sequence: 32;
+}
+
+header IGMPHeader {
+    type: 8;
+    max_resp_time: 8;
+    checksum: 16 [computed];
+    group_address: 32;
+}
+
+header OSPFHeader {
+    version: 8 = 2;
+    type: 8;
+    length: 16;
+    router_id: 32;
+    area_id: 32;
+    checksum: 16 [computed];
+    auth_type: 16;
+    authentication: 64;
+}
+
+header RIPHeader {
+    command: 8;
+    version: 8 = 2;
+    reserved: 16 = 0;
+}
+
+header HSRPHeader {
+    version: 8 = 0;
+    opcode: 8;
+    state: 8;
+    hello_time: 8;
+    hold_time: 8;
+    priority: 8;
+    group: 8;
+    reserved: 8 = 0;
+    auth_data: 64;
+    virtual_ip: 32;
+}
+
+header LACPHeader {
+    subtype: 8 = 1;
+    version_number: 8 = 1;
+    actor_type: 8 = 1;
+    actor_info_len: 8 = 20;
+    actor_sys_priority: 16;
+    actor_system: 48;
+    actor_key: 16;
+    actor_port_priority: 16;
+    actor_port: 16;
+    actor_state: 8;
+    reserved1: 24 = 0;
+    partner_type: 8 = 2;
+    partner_info_len: 8 = 20;
+    partner_sys_priority: 16;
+    partner_system: 48;
+    partner_key: 16;
+    partner_port_priority: 16;
+    partner_port: 16;
+    partner_state: 8;
+    reserved2: 24 = 0;
+    collector_type: 8 = 3;
+    collector_info_len: 8 = 16;
+    collector_max_delay: 16;
+    reserved3: 96 = 0;
+    terminator_type: 8 = 0;
+    terminator_len: 8 = 0;
+    reserved4: 400 = 0;
+}
+
+header MPLSHeader {
+    label: 20;
+    traffic_class: 3;
+    bottom_of_stack: 1;
+    ttl: 8;
+}
+
+header VLANHeader {
+    tpid: 16 = 0x8100;
+    priority: 3;
+    cfi: 1;
+    vlan_id: 12;
+}

@@ -1,21 +1,81 @@
-# HDL Compiler - Header Definition Language Compiler
+# CPPScapy Tools Directory
 
-The HDL Compiler is a tool that generates C++ header classes from declarative Header Definition Language (HDL) files. It's designed specifically for network protocol implementation, providing precise bit-level field control and type-safe access.
+## ⚠️ **Notice: Tools Have Moved**
 
-## Features
+The HDL compiler tools have been moved to a proper Python package structure for better distribution and maintenance.
 
-- **Declarative Syntax**: Define headers using simple, readable HDL syntax
-- **Bit-Level Precision**: Exact control over field bit widths and positions
-- **Type Safety**: Generated C++ code provides compile-time type checking
-- **Automatic Code Generation**: Produces efficient C++ classes with serialization
-- **Enum Support**: Named constants with underlying type specification
-- **Computed Fields**: Automatic calculation of lengths, checksums, etc.
-- **Individual Flag Control**: Set and get individual bits in flag fields
-- **Validation**: Built-in field validation and constraint checking
+## 📦 **New Location**
 
-## Installation
+The tools are now available as a pip-installable Python package:
 
-The HDL compiler is a Python 3 script with no external dependencies:
+```bash
+# Install the package
+cd python-package
+pip install -e .
+
+# Use the command-line tools
+hdl-compile protocols.xml -o headers.h
+hdl-convert protocols.xml -o protocols.hdl
+```
+
+## 🗂️ **Package Structure**
+
+```
+python-package/
+├── cppscapy/               # Main package
+│   ├── hdl_compiler.py     # HDL/XML compiler (moved from tools/)
+│   ├── format_converter.py # Format converter (moved from tools/)
+│   └── __init__.py         # Package exports
+├── examples/               # Example protocol definitions
+├── tests/                  # Test suite
+├── setup.py               # Package configuration
+└── README.md              # Package documentation
+```
+
+## 🚀 **Getting Started**
+
+1. **Install the package:**
+   ```bash
+   cd python-package
+   pip install -e .
+   ```
+
+2. **Use command-line tools:**
+   ```bash
+   hdl-compile examples/network_protocols.xml -o output.h
+   hdl-convert examples/network_protocols.xml -o output.hdl
+   ```
+
+3. **Use Python API:**
+   ```python
+   from cppscapy import HDLParser, XMLParser, CPPCodeGenerator
+   
+   parser = HDLParser('protocols.hdl')
+   headers, enums = parser.parse()
+   
+   generator = CPPCodeGenerator(headers, enums)
+   cpp_code = generator.generate()
+   ```
+
+## 📚 **Documentation**
+
+- **Package README**: `python-package/README.md`
+- **Format Comparison**: `python-package/docs/XML_VS_HDL_FORMATS.md`
+- **Examples**: `python-package/examples/`
+
+## 🔧 **Development**
+
+```bash
+cd python-package
+./dev-setup.sh  # Install development environment
+./build.sh      # Build distribution packages
+```
+
+---
+
+## ⚠️ **Legacy Information Below**
+
+*The information below describes the old standalone tools that have been superseded by the Python package above.*
 
 ```bash
 chmod +x tools/hdl_compiler.py

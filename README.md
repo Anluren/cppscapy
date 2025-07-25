@@ -22,8 +22,8 @@ A convenient C++ library for constructing standard network headers (MAC, IPv4, I
 
 ## Requirements
 
-### For HDL Compiler
-- **Python 3.7+** (Python 3.8+ recommended)
+### For Python Package (HDL Compiler Tools)
+- **Python 3.7+** (Python 3.8+ recommended)  
 - Standard library only (no external dependencies)
 - Optional: `xmllint` for XML schema validation
 
@@ -42,17 +42,43 @@ cmake ..
 make
 ```
 
-### HDL/XML Compilation
+## Python Package Installation
+
+The HDL compiler tools are now available as a pip-installable Python package:
+
+### Install from Source
+```bash
+cd python-package
+pip install -e .
+```
+
+### Usage
+```bash
+# Compile HDL/XML to C++ headers
+hdl-compile examples/network_protocols.xml -o generated_headers.h
+hdl-compile examples/network_protocols.hdl -o generated_headers.h
+
+# Convert between formats
+hdl-convert protocols.xml -o protocols.hdl
+hdl-convert protocols.hdl -o protocols.xml
+
+# Python API usage
+python3 -c "
+from cppscapy import HDLParser, CPPCodeGenerator
+parser = HDLParser('protocols.hdl')
+headers, enums = parser.parse()
+generator = CPPCodeGenerator(headers, enums)
+print(generator.generate())
+"
+```
+
+### Legacy Tool Usage (Deprecated)
+
+The standalone tools in `tools/` have been moved to the Python package. For legacy usage:
 
 ```bash
-# Compile XML format (new)
+# Legacy - use Python package instead
 python3 tools/hdl_compiler.py examples/network_protocols.xml -o generated_headers.h
-
-# Compile HDL format (original)
-python3 tools/hdl_compiler.py examples/network_protocols.hdl -o generated_headers.h
-
-# Auto-detect format
-python3 tools/hdl_compiler.py protocols.xml -o output.h --verbose
 ```
 
 ### Format Conversion
