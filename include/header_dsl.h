@@ -137,6 +137,112 @@ private:
     std::vector<uint8_t> data_;
 };
 
+// IPv4 Header for proper packet structure
+class IPv4Header : public HeaderBase {
+public:
+    IPv4Header() : data_(20, 0) {
+        // Set default values
+        set_version(4);
+        set_ihl(5);  // 20 bytes header length
+        set_ttl(64);
+    }
+    
+    // Field accessors
+    uint8_t version() const { return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 0, 4).get(); }
+    void set_version(uint8_t value) { BitField<uint8_t>(data_, 0, 4).set(value); }
+    
+    uint8_t ihl() const { return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 4, 4).get(); }
+    void set_ihl(uint8_t value) { BitField<uint8_t>(data_, 4, 4).set(value); }
+    
+    uint8_t tos() const { return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 8, 8).get(); }
+    void set_tos(uint8_t value) { BitField<uint8_t>(data_, 8, 8).set(value); }
+    
+    uint16_t total_length() const { return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 16, 16).get(); }
+    void set_total_length(uint16_t value) { BitField<uint16_t>(data_, 16, 16).set(value); }
+    
+    uint16_t identification() const { return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 32, 16).get(); }
+    void set_identification(uint16_t value) { BitField<uint16_t>(data_, 32, 16).set(value); }
+    
+    uint8_t flags() const { return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 48, 3).get(); }
+    void set_flags(uint8_t value) { BitField<uint8_t>(data_, 48, 3).set(value); }
+    
+    uint16_t fragment_offset() const { return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 51, 13).get(); }
+    void set_fragment_offset(uint16_t value) { BitField<uint16_t>(data_, 51, 13).set(value); }
+    
+    uint8_t ttl() const { return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 64, 8).get(); }
+    void set_ttl(uint8_t value) { BitField<uint8_t>(data_, 64, 8).set(value); }
+    
+    uint8_t protocol() const { return BitField<uint8_t>(const_cast<std::vector<uint8_t>&>(data_), 72, 8).get(); }
+    void set_protocol(uint8_t value) { BitField<uint8_t>(data_, 72, 8).set(value); }
+    
+    uint16_t header_checksum() const { return BitField<uint16_t>(const_cast<std::vector<uint8_t>&>(data_), 80, 16).get(); }
+    void set_header_checksum(uint16_t value) { BitField<uint16_t>(data_, 80, 16).set(value); }
+    
+    uint32_t src_ip() const { return BitField<uint32_t>(const_cast<std::vector<uint8_t>&>(data_), 96, 32).get(); }
+    void set_src_ip(uint32_t value) { BitField<uint32_t>(data_, 96, 32).set(value); }
+    
+    uint32_t dst_ip() const { return BitField<uint32_t>(const_cast<std::vector<uint8_t>&>(data_), 128, 32).get(); }
+    void set_dst_ip(uint32_t value) { BitField<uint32_t>(data_, 128, 32).set(value); }
+    
+    // Convenience methods for IP addresses
+    void set_src_ip(const std::string& ip) { set_src_ip(ip_string_to_uint32(ip)); }
+    void set_dst_ip(const std::string& ip) { set_dst_ip(ip_string_to_uint32(ip)); }
+    
+    std::vector<uint8_t> to_bytes() const override { return data_; }
+    bool from_bytes(const std::vector<uint8_t>& bytes) override {
+        if (bytes.size() < 20) return false;
+        data_.assign(bytes.begin(), bytes.begin() + 20);
+        return true;
+    }
+    
+    size_t size_bits() const override { return 160; } // 20 bytes * 8
+    bool is_valid() const override { return data_.size() == 20; }
+    
+    void update_computed_fields() override {
+        // Calculate header checksum
+        set_header_checksum(0); // Clear checksum first
+        uint32_t sum = 0;
+        
+        // Sum all 16-bit words in the header
+        for (size_t i = 0; i < 20; i += 2) {
+            uint16_t word = (data_[i] << 8) | data_[i + 1];
+            sum += word;
+        }
+        
+        // Add carry
+        while (sum >> 16) {
+            sum = (sum & 0xFFFF) + (sum >> 16);
+        }
+        
+        // One's complement
+        uint16_t checksum = ~sum;
+        set_header_checksum(checksum);
+    }
+    
+private:
+    std::vector<uint8_t> data_;
+    
+    // Helper function to convert IP string to uint32_t
+    uint32_t ip_string_to_uint32(const std::string& ip) const {
+        uint32_t result = 0;
+        size_t start = 0;
+        int shift = 24;
+        
+        for (int i = 0; i < 4; ++i) {
+            size_t end = ip.find('.', start);
+            if (end == std::string::npos) end = ip.length();
+            
+            uint32_t octet = std::stoul(ip.substr(start, end - start));
+            result |= (octet << shift);
+            
+            start = end + 1;
+            shift -= 8;
+        }
+        
+        return result;
+    }
+};
+
 // Generated from DSL: header UDPHeader with computed fields
 class UDPHeader : public HeaderBase {
 public:

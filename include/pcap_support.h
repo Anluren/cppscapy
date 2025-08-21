@@ -324,26 +324,56 @@ inline Packet create_ethernet_packet(const dsl::EthernetHeader &eth_header,
   return packet;
 }
 
-// Create a UDP packet with Ethernet header
+// Create a UDP packet with Ethernet and IPv4 headers
 inline Packet create_udp_packet(const dsl::EthernetHeader &eth_header,
                                 const dsl::UDPHeader &udp_header,
                                 const std::vector<uint8_t> &payload = {}) {
   Packet packet;
+  
+  // Add Ethernet header
   packet.add_header(eth_header);
+  
+  // Create IPv4 header
+  dsl::IPv4Header ip;
+  ip.set_src_ip("192.168.1.1");
+  ip.set_dst_ip("192.168.1.100");
+  ip.set_protocol(17); // UDP protocol
+  ip.set_total_length(20 + 8 + payload.size()); // IP header + UDP header + payload
+  ip.set_identification(0x1234);
+  ip.update_computed_fields();
+  packet.add_header(ip);
+  
+  // Add UDP header
   packet.add_header(udp_header);
+  
   if (!payload.empty()) {
     packet.set_payload(payload);
   }
   return packet;
 }
 
-// Create a TCP packet with Ethernet header
+// Create a TCP packet with Ethernet and IPv4 headers
 inline Packet create_tcp_packet(const dsl::EthernetHeader &eth_header,
                                 const dsl::TCPHeader &tcp_header,
                                 const std::vector<uint8_t> &payload = {}) {
   Packet packet;
+  
+  // Add Ethernet header
   packet.add_header(eth_header);
+  
+  // Create IPv4 header
+  dsl::IPv4Header ip;
+  ip.set_src_ip("192.168.1.1");
+  ip.set_dst_ip("192.168.1.100");
+  ip.set_protocol(6); // TCP protocol
+  ip.set_total_length(20 + 20 + payload.size()); // IP header + TCP header + payload
+  ip.set_identification(0x5678);
+  ip.update_computed_fields();
+  packet.add_header(ip);
+  
+  // Add TCP header
   packet.add_header(tcp_header);
+  
   if (!payload.empty()) {
     packet.set_payload(payload);
   }
