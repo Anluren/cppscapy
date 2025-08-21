@@ -1,18 +1,29 @@
 cmake_minimum_required(VERSION 3.10)
-project(CppScapy)
+project(CppScapy LANGUAGES CXX)
 
-# Set C++ standard
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# Include source file definitions from src directory
+add_subdirectory(src)
 
-# Add include directories
-include_directories(include)
-
-# Create library
+# Create library using the source files defined in src/
 add_library(cppscapy STATIC
-    src/network_headers.cpp
-    src/tcp_udp_icmp.cpp
-    src/utils.cpp
+    ${CPPSCAPY_SOURCES}
+    ${CPPSCAPY_HEADERS}
+)
+
+# Set target properties
+target_include_directories(cppscapy PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+
+# Set C++ standard for this target
+target_compile_features(cppscapy PUBLIC cxx_std_17)
+
+# Target-specific compiler flags
+target_compile_options(cppscapy PRIVATE 
+    $<$<CXX_COMPILER_ID:GNU>:-Wall -Wextra>
+    $<$<CXX_COMPILER_ID:Clang>:-Wall -Wextra>
+    $<$<CXX_COMPILER_ID:MSVC>:/W4>
 )
 
 # Create demo executable
@@ -22,9 +33,6 @@ add_executable(demo
 
 # Link demo with library
 target_link_libraries(demo cppscapy)
-
-# Compiler flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 
 # Optional: Create a simple test executable
 add_executable(simple_test
@@ -151,3 +159,17 @@ add_executable(performance_comparison
 )
 
 target_link_libraries(performance_comparison cppscapy)
+
+# PCAP demo
+add_executable(pcap_demo
+    examples/pcap_demo.cpp
+)
+
+target_link_libraries(pcap_demo cppscapy)
+
+# Simple PCAP example
+add_executable(simple_pcap_example
+    examples/simple_pcap_example.cpp
+)
+
+target_link_libraries(simple_pcap_example cppscapy)
