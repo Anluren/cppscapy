@@ -173,3 +173,13 @@ add_executable(simple_pcap_example
 )
 
 target_link_libraries(simple_pcap_example cppscapy)
+
+# Packet decoder demo
+add_executable(packet_decoder_demo
+    examples/packet_decoder_demo.cpp
+)
+
+target_link_libraries(packet_decoder_demo cppscapy)
+
+add_executable(test_proper_packets examples/test_proper_packets.cpp)
+target_link_libraries(test_proper_packets cppscapy)

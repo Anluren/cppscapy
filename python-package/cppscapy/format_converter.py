@@ -4,13 +4,23 @@ Format Converter
 ================
 
 Convert between HDL and XML formats for network protocol definitions.
+Supports both lxml (preferred) and standard library ElementTree as fallback.
 """
 
 import argparse
 import sys
 from pathlib import Path
-import xml.etree.ElementTree as ET
-from xml.dom import minidom
+
+# Try to import lxml first, fall back to standard library
+try:
+    from lxml import etree
+
+    HAS_LXML = True
+except ImportError:
+    import xml.etree.ElementTree as ET
+    from xml.dom import minidom
+
+    HAS_LXML = False
 
 # Import the existing parser classes
 from .hdl_compiler import HDLParser, XMLParser, FieldType
@@ -112,6 +122,85 @@ class FormatConverter:
 
     def _generate_xml(self) -> str:
         """Generate XML format content"""
+        if HAS_LXML:
+            return self._generate_xml_lxml()
+        else:
+            return self._generate_xml_builtin()
+
+    def _generate_xml_lxml(self) -> str:
+        """Generate XML format content using lxml (preferred)"""
+        root = etree.Element("network_protocols")
+        root.set(
+            "{http://www.w3.org/2001/XMLSchema-instance}" "noNamespaceSchemaLocation",
+            "network_protocols.xsd",
+        )
+
+        # Add comment
+        root.append(etree.Comment(" Converted from HDL format "))
+
+        # Generate enums
+        for enum_name, enum_def in self.enums.items():
+            enum_elem = etree.SubElement(root, "enum")
+            enum_elem.set("name", enum_name)
+            enum_elem.set("underlying_type", enum_def.underlying_type)
+
+            for value in enum_def.values:
+                value_elem = etree.SubElement(enum_elem, "value")
+                value_elem.set("name", value.name)
+                if isinstance(value.value, int):
+                    if value.value > 255:
+                        value_elem.set("value", f"0x{value.value:04X}")
+                    else:
+                        value_elem.set("value", str(value.value))
+                else:
+                    value_elem.set("value", str(value.value))
+
+        # Generate headers
+        for header_name, header_def in self.headers.items():
+            header_elem = etree.SubElement(root, "header")
+            header_elem.set("name", header_name)
+            description = f"Generated {header_name} protocol header"
+            header_elem.set("description", description)
+
+            for field in header_def.fields:
+                field_elem = etree.SubElement(header_elem, "field")
+                field_elem.set("name", field.name)
+                field_elem.set("bit_width", str(field.bit_width))
+                field_desc = f"{field.name.replace('_', ' ').title()} field"
+                field_elem.set("description", field_desc)
+
+                if field.field_type == FieldType.ENUM:
+                    field_elem.set("type", "enum")
+                    if field.enum_type:
+                        field_elem.set("enum_type", field.enum_type)
+                else:
+                    field_elem.set("type", "integer")
+
+                if field.default_value is not None:
+                    if isinstance(field.default_value, int):
+                        if field.default_value > 255:
+                            default_val = f"0x{field.default_value:04X}"
+                        else:
+                            default_val = str(field.default_value)
+                        field_elem.set("default", default_val)
+                    else:
+                        field_elem.set("default", str(field.default_value))
+
+                # Add attributes if any
+                if field.attributes:
+                    attrs_elem = etree.SubElement(field_elem, "attributes")
+                    for attr in field.attributes:
+                        attr_elem = etree.SubElement(attrs_elem, "attribute")
+                        attr_elem.text = attr
+
+        # Pretty print with lxml
+        xml_str = etree.tostring(root, pretty_print=True, encoding="unicode").strip()
+
+        # Add XML declaration manually for lxml
+        return '<?xml version="1.0" encoding="UTF-8"?>\n' + xml_str
+
+    def _generate_xml_builtin(self) -> str:
+        """Generate XML format content using standard library (fallback)"""
         root = ET.Element("network_protocols")
         root.set("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
         root.set("xsi:noNamespaceSchemaLocation", "network_protocols.xsd")
@@ -140,15 +229,15 @@ class FormatConverter:
         for header_name, header_def in self.headers.items():
             header_elem = ET.SubElement(root, "header")
             header_elem.set("name", header_name)
-            header_elem.set("description", f"Generated {header_name} protocol header")
+            description = f"Generated {header_name} protocol header"
+            header_elem.set("description", description)
 
             for field in header_def.fields:
                 field_elem = ET.SubElement(header_elem, "field")
                 field_elem.set("name", field.name)
                 field_elem.set("bit_width", str(field.bit_width))
-                field_elem.set(
-                    "description", f"{field.name.replace('_', ' ').title()} field"
-                )
+                field_desc = f"{field.name.replace('_', ' ').title()} field"
+                field_elem.set("description", field_desc)
 
                 if field.field_type == FieldType.ENUM:
                     field_elem.set("type", "enum")
@@ -160,9 +249,10 @@ class FormatConverter:
                 if field.default_value is not None:
                     if isinstance(field.default_value, int):
                         if field.default_value > 255:
-                            field_elem.set("default", f"0x{field.default_value:04X}")
+                            default_val = f"0x{field.default_value:04X}"
                         else:
-                            field_elem.set("default", str(field.default_value))
+                            default_val = str(field.default_value)
+                        field_elem.set("default", default_val)
                     else:
                         field_elem.set("default", str(field.default_value))
 
@@ -173,10 +263,11 @@ class FormatConverter:
                         attr_elem = ET.SubElement(attrs_elem, "attribute")
                         attr_elem.text = attr
 
-        # Pretty print
+        # Pretty print with minidom (fallback)
         rough_string = ET.tostring(root, encoding="unicode")
         reparsed = minidom.parseString(rough_string)
-        return reparsed.toprettyxml(indent="    ")[23:]  # Remove XML declaration line
+        # Remove XML declaration line
+        return reparsed.toprettyxml(indent="    ")[23:]
 
 
 def main():
@@ -205,6 +296,8 @@ Examples:
 
     try:
         if args.verbose:
+            xml_lib = "lxml" if HAS_LXML else "xml.etree.ElementTree"
+            print(f"Using XML library: {xml_lib}")
             print(f"Converting {args.input_file} -> {args.output}")
 
         converter = FormatConverter()

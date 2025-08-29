@@ -20,7 +20,16 @@ import re
 import sys
 import os
 from pathlib import Path
-import xml.etree.ElementTree as ET
+
+# Try to import lxml first, fall back to standard library
+try:
+    from lxml import etree
+
+    HAS_LXML = True
+except ImportError:
+    import xml.etree.ElementTree as etree
+
+    HAS_LXML = False
 
 # Check Python version
 if sys.version_info < (3, 7):
@@ -248,15 +257,15 @@ class XMLParser:
     def parse_file(self, filename: str) -> None:
         """Parse an XML file"""
         try:
-            tree = ET.parse(filename)
+            tree = etree.parse(filename)
             root = tree.getroot()
             self.parse_xml_content(root)
-        except ET.ParseError as e:
+        except etree.ParseError as e:
             raise ValueError(f"XML parsing error: {e}")
         except Exception as e:
             raise ValueError(f"Error reading XML file: {e}")
 
-    def parse_xml_content(self, root: ET.Element) -> None:
+    def parse_xml_content(self, root) -> None:
         """Parse XML content from root element"""
         # Parse enums
         for enum_elem in root.findall("enum"):
@@ -268,7 +277,7 @@ class XMLParser:
             header_def = self._parse_xml_header(header_elem)
             self.headers[header_def.name] = header_def
 
-    def _parse_xml_enum(self, enum_elem: ET.Element) -> EnumDef:
+    def _parse_xml_enum(self, enum_elem) -> EnumDef:
         """Parse enum from XML element"""
         name = enum_elem.get("name", "")
         underlying_type = enum_elem.get("underlying_type", "uint16_t")
@@ -291,7 +300,7 @@ class XMLParser:
 
         return EnumDef(name, underlying_type, values)
 
-    def _parse_xml_header(self, header_elem: ET.Element) -> HeaderDef:
+    def _parse_xml_header(self, header_elem) -> HeaderDef:
         """Parse header from XML element"""
         name = header_elem.get("name", "")
 
@@ -306,7 +315,7 @@ class XMLParser:
 
         return HeaderDef(name, fields, attributes)
 
-    def _parse_xml_field(self, field_elem: ET.Element) -> Optional[Field]:
+    def _parse_xml_field(self, field_elem) -> Optional[Field]:
         """Parse field from XML element"""
         field_name = field_elem.get("name", "")
         bit_width_str = field_elem.get("bit_width", "0")
@@ -655,7 +664,7 @@ class CPPCodeGenerator:
     def _get_cpp_type(self, field: Field) -> str:
         """Get appropriate C++ type for field"""
         if field.field_type == FieldType.ENUM:
-            return field.enum_type
+            return field.enum_type or "uint16_t"
 
         if isinstance(field.bit_width, str):
             return "uint32_t"  # Default for variable width
@@ -994,6 +1003,8 @@ Constraints:
     try:
         # Parse HDL/XML file
         if args.verbose:
+            xml_lib = "lxml" if HAS_LXML else "xml.etree.ElementTree"
+            print(f"Using XML library: {xml_lib}")
             print(f"Parsing {args.input_file}...")
             print(f"Output namespace: {args.namespace}")
             print(f"Output file: {output_file}")
@@ -1002,7 +1013,9 @@ Constraints:
         parser.parse_file(args.input_file)
 
         if args.verbose:
-            print(f"Found {len(parser.enums)} enums and {len(parser.headers)} headers")
+            enum_count = len(parser.enums)
+            header_count = len(parser.headers)
+            print(f"Found {enum_count} enums and {header_count} headers")
 
         # Validate that we found some content
         if not parser.enums and not parser.headers:
@@ -1010,7 +1023,7 @@ Constraints:
 
         # Generate C++ code
         if args.verbose:
-            print(f"Generating C++ code...")
+            print("Generating C++ code...")
 
         generator = CPPCodeGenerator(parser, args.namespace)
         cpp_code = generator.generate()

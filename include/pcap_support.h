@@ -4,6 +4,8 @@
 #include <chrono>
 #include <cstdint>
 #include <fstream>
+#include <iomanip>
+#include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -310,6 +312,15 @@ void print_packet_info(const Packet &packet);
 // Print hex dump of packet data
 void hex_dump(const Packet &packet, size_t max_bytes = 0);
 
+// Print hex dump in specific format (8-digit offset, 4-byte groups, ASCII)
+void hex_dump_formatted(const Packet &packet, size_t max_bytes = 0);
+
+// Print hex dump of raw data in specific format
+void hex_dump_data(const std::vector<uint8_t> &data, size_t max_bytes = 0);
+
+// Print hex dump of raw data pointer in specific format
+void hex_dump_data(const uint8_t *data, size_t data_size, size_t max_bytes = 0);
+
 // Create a sample packet for testing
 Packet create_sample_packet();
 
@@ -329,23 +340,24 @@ inline Packet create_udp_packet(const dsl::EthernetHeader &eth_header,
                                 const dsl::UDPHeader &udp_header,
                                 const std::vector<uint8_t> &payload = {}) {
   Packet packet;
-  
+
   // Add Ethernet header
   packet.add_header(eth_header);
-  
+
   // Create IPv4 header
   dsl::IPv4Header ip;
   ip.set_src_ip("192.168.1.1");
   ip.set_dst_ip("192.168.1.100");
   ip.set_protocol(17); // UDP protocol
-  ip.set_total_length(20 + 8 + payload.size()); // IP header + UDP header + payload
+  ip.set_total_length(20 + 8 +
+                      payload.size()); // IP header + UDP header + payload
   ip.set_identification(0x1234);
   ip.update_computed_fields();
   packet.add_header(ip);
-  
+
   // Add UDP header
   packet.add_header(udp_header);
-  
+
   if (!payload.empty()) {
     packet.set_payload(payload);
   }
@@ -357,27 +369,308 @@ inline Packet create_tcp_packet(const dsl::EthernetHeader &eth_header,
                                 const dsl::TCPHeader &tcp_header,
                                 const std::vector<uint8_t> &payload = {}) {
   Packet packet;
-  
+
   // Add Ethernet header
   packet.add_header(eth_header);
-  
+
   // Create IPv4 header
   dsl::IPv4Header ip;
   ip.set_src_ip("192.168.1.1");
   ip.set_dst_ip("192.168.1.100");
   ip.set_protocol(6); // TCP protocol
-  ip.set_total_length(20 + 20 + payload.size()); // IP header + TCP header + payload
+  ip.set_total_length(20 + 20 +
+                      payload.size()); // IP header + TCP header + payload
   ip.set_identification(0x5678);
   ip.update_computed_fields();
   packet.add_header(ip);
-  
+
   // Add TCP header
   packet.add_header(tcp_header);
-  
+
   if (!payload.empty()) {
     packet.set_payload(payload);
   }
   return packet;
+}
+
+// Packet Decoder - Automatically decode Ethernet-based packets
+struct DecodedPacket {
+  // Layer information
+  bool has_ethernet = false;
+  bool has_ipv4 = false;
+  bool has_udp = false;
+  bool has_tcp = false;
+
+  // Parsed headers
+  dsl::EthernetHeader ethernet;
+  dsl::IPv4Header ipv4;
+  dsl::UDPHeader udp;
+  dsl::TCPHeader tcp;
+
+  // Payload and metadata
+  std::vector<uint8_t> payload;
+  size_t payload_offset = 0;
+
+  // Error information
+  bool decode_error = false;
+  std::string error_message;
+
+  // Helper methods
+  bool is_ipv4_packet() const { return has_ethernet && has_ipv4; }
+  bool is_udp_packet() const { return is_ipv4_packet() && has_udp; }
+  bool is_tcp_packet() const { return is_ipv4_packet() && has_tcp; }
+
+  std::string get_protocol_string() const {
+    if (is_tcp_packet())
+      return "TCP";
+    if (is_udp_packet())
+      return "UDP";
+    if (is_ipv4_packet())
+      return "IPv4";
+    if (has_ethernet)
+      return "Ethernet";
+    return "Unknown";
+  }
+
+  // Get source/destination info as strings
+  std::string get_src_ip() const {
+    if (!has_ipv4)
+      return "";
+    uint32_t ip = ipv4.src_ip();
+    return std::to_string((ip >> 24) & 0xFF) + "." +
+           std::to_string((ip >> 16) & 0xFF) + "." +
+           std::to_string((ip >> 8) & 0xFF) + "." + std::to_string(ip & 0xFF);
+  }
+
+  std::string get_dst_ip() const {
+    if (!has_ipv4)
+      return "";
+    uint32_t ip = ipv4.dst_ip();
+    return std::to_string((ip >> 24) & 0xFF) + "." +
+           std::to_string((ip >> 16) & 0xFF) + "." +
+           std::to_string((ip >> 8) & 0xFF) + "." + std::to_string(ip & 0xFF);
+  }
+
+  uint16_t get_src_port() const {
+    if (is_udp_packet())
+      return udp.src_port();
+    if (is_tcp_packet())
+      return tcp.src_port();
+    return 0;
+  }
+
+  uint16_t get_dst_port() const {
+    if (is_udp_packet())
+      return udp.dst_port();
+    if (is_tcp_packet())
+      return tcp.dst_port();
+    return 0;
+  }
+};
+
+// Decode an Ethernet-based packet
+inline DecodedPacket decode_packet(const Packet &packet) {
+  DecodedPacket decoded;
+  const auto &data = packet.data();
+  size_t offset = 0;
+
+  // Check minimum size for Ethernet header
+  if (data.size() < 14) {
+    decoded.decode_error = true;
+    decoded.error_message = "Packet too small for Ethernet header";
+    return decoded;
+  }
+
+  // Parse Ethernet header
+  if (!packet.parse_header(decoded.ethernet, offset)) {
+    decoded.decode_error = true;
+    decoded.error_message = "Failed to parse Ethernet header";
+    return decoded;
+  }
+  decoded.has_ethernet = true;
+  offset += 14; // Ethernet header size
+
+  // Check if it's IPv4
+  if (decoded.ethernet.ethertype() == dsl::EtherType::IPv4) {
+    // Check minimum size for IPv4 header
+    if (data.size() < offset + 20) {
+      decoded.decode_error = true;
+      decoded.error_message = "Packet too small for IPv4 header";
+      return decoded;
+    }
+
+    // Parse IPv4 header
+    if (!packet.parse_header(decoded.ipv4, offset)) {
+      decoded.decode_error = true;
+      decoded.error_message = "Failed to parse IPv4 header";
+      return decoded;
+    }
+    decoded.has_ipv4 = true;
+
+    // Get IPv4 header length (IHL * 4 bytes)
+    size_t ipv4_header_len = decoded.ipv4.ihl() * 4;
+    offset += ipv4_header_len;
+
+    // Check protocol field for UDP or TCP
+    uint8_t protocol = decoded.ipv4.protocol();
+
+    if (protocol == 17) { // UDP
+      // Check minimum size for UDP header
+      if (data.size() < offset + 8) {
+        decoded.decode_error = true;
+        decoded.error_message = "Packet too small for UDP header";
+        return decoded;
+      }
+
+      // Parse UDP header
+      if (!packet.parse_header(decoded.udp, offset)) {
+        decoded.decode_error = true;
+        decoded.error_message = "Failed to parse UDP header";
+        return decoded;
+      }
+      decoded.has_udp = true;
+      offset += 8; // UDP header size
+
+    } else if (protocol == 6) { // TCP
+      // Check minimum size for TCP header
+      if (data.size() < offset + 20) {
+        decoded.decode_error = true;
+        decoded.error_message = "Packet too small for TCP header";
+        return decoded;
+      }
+
+      // Parse TCP header
+      if (!packet.parse_header(decoded.tcp, offset)) {
+        decoded.decode_error = true;
+        decoded.error_message = "Failed to parse TCP header";
+        return decoded;
+      }
+      decoded.has_tcp = true;
+
+      // Get TCP header length (data offset * 4 bytes)
+      size_t tcp_header_len = decoded.tcp.data_offset() * 4;
+      offset += tcp_header_len;
+    }
+  }
+
+  // Extract payload
+  decoded.payload_offset = offset;
+  if (offset < data.size()) {
+    decoded.payload.assign(data.begin() + offset, data.end());
+  }
+
+  return decoded;
+}
+
+// Print decoded packet information
+inline void print_decoded_packet(const DecodedPacket &decoded) {
+  std::cout << "=== Decoded Packet Information ===" << std::endl;
+
+  if (decoded.decode_error) {
+    std::cout << "❌ Decode Error: " << decoded.error_message << std::endl;
+    return;
+  }
+
+  std::cout << "Protocol Stack: " << decoded.get_protocol_string() << std::endl;
+
+  if (decoded.has_ethernet) {
+    std::cout << "┌─ Ethernet Header:" << std::endl;
+    std::cout << "│  Dst MAC: " << std::hex << decoded.ethernet.dst_mac()
+              << std::dec << std::endl;
+    std::cout << "│  Src MAC: " << std::hex << decoded.ethernet.src_mac()
+              << std::dec << std::endl;
+    std::cout << "│  Type: 0x" << std::hex
+              << static_cast<uint16_t>(decoded.ethernet.ethertype())
+              << std::dec;
+    if (decoded.ethernet.ethertype() == dsl::EtherType::IPv4) {
+      std::cout << " (IPv4)";
+    }
+    std::cout << std::endl;
+  }
+
+  if (decoded.has_ipv4) {
+    std::cout << "├─ IPv4 Header:" << std::endl;
+    std::cout << "│  Version: " << static_cast<int>(decoded.ipv4.version())
+              << std::endl;
+    std::cout << "│  Header Length: "
+              << static_cast<int>(decoded.ipv4.ihl() * 4) << " bytes"
+              << std::endl;
+    std::cout << "│  Total Length: " << decoded.ipv4.total_length()
+              << std::endl;
+    std::cout << "│  TTL: " << static_cast<int>(decoded.ipv4.ttl())
+              << std::endl;
+    std::cout << "│  Protocol: " << static_cast<int>(decoded.ipv4.protocol());
+    if (decoded.ipv4.protocol() == 17)
+      std::cout << " (UDP)";
+    else if (decoded.ipv4.protocol() == 6)
+      std::cout << " (TCP)";
+    std::cout << std::endl;
+    std::cout << "│  Src IP: " << decoded.get_src_ip() << std::endl;
+    std::cout << "│  Dst IP: " << decoded.get_dst_ip() << std::endl;
+    std::cout << "│  Checksum: 0x" << std::hex << decoded.ipv4.header_checksum()
+              << std::dec << std::endl;
+  }
+
+  if (decoded.has_udp) {
+    std::cout << "├─ UDP Header:" << std::endl;
+    std::cout << "│  Src Port: " << decoded.udp.src_port() << std::endl;
+    std::cout << "│  Dst Port: " << decoded.udp.dst_port() << std::endl;
+    std::cout << "│  Length: " << decoded.udp.length() << " bytes" << std::endl;
+    std::cout << "│  Checksum: 0x" << std::hex << decoded.udp.checksum()
+              << std::dec << std::endl;
+  }
+
+  if (decoded.has_tcp) {
+    std::cout << "├─ TCP Header:" << std::endl;
+    std::cout << "│  Src Port: " << decoded.tcp.src_port() << std::endl;
+    std::cout << "│  Dst Port: " << decoded.tcp.dst_port() << std::endl;
+    std::cout << "│  Seq Num: " << decoded.tcp.seq_num() << std::endl;
+    std::cout << "│  Ack Num: " << decoded.tcp.ack_num() << std::endl;
+    std::cout << "│  Flags: ";
+    if (decoded.tcp.flag_syn())
+      std::cout << "SYN ";
+    if (decoded.tcp.flag_ack())
+      std::cout << "ACK ";
+    if (decoded.tcp.flag_fin())
+      std::cout << "FIN ";
+    std::cout << std::endl;
+    std::cout << "│  Window: " << decoded.tcp.window_size() << std::endl;
+  }
+
+  if (!decoded.payload.empty()) {
+    std::cout << "└─ Payload: " << decoded.payload.size() << " bytes"
+              << std::endl;
+    if (decoded.payload.size() <= 64) {
+      std::cout << "   Data: ";
+      for (size_t i = 0; i < std::min(decoded.payload.size(), size_t(32));
+           ++i) {
+        std::cout << std::hex << std::setfill('0') << std::setw(2)
+                  << static_cast<unsigned>(decoded.payload[i]) << " ";
+      }
+      if (decoded.payload.size() > 32)
+        std::cout << "...";
+      std::cout << std::dec << std::endl;
+
+      // Try to print as ASCII if printable
+      std::cout << "   ASCII: ";
+      for (size_t i = 0; i < std::min(decoded.payload.size(), size_t(32));
+           ++i) {
+        char c = static_cast<char>(decoded.payload[i]);
+        std::cout << (std::isprint(c) ? c : '.');
+      }
+      if (decoded.payload.size() > 32)
+        std::cout << "...";
+      std::cout << std::endl;
+    }
+  } else {
+    std::cout << "└─ No payload data" << std::endl;
+  }
+}
+
+// Decode and print packet in one call
+inline void decode_and_print_packet(const Packet &packet) {
+  auto decoded = decode_packet(packet);
+  print_decoded_packet(decoded);
 }
 
 } // namespace utils

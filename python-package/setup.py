@@ -2,28 +2,33 @@
 """
 CPPScapy HDL Compiler - Setup Script
 
-A Python package for compiling Hardware Description Language (HDL) and XML 
+A Python package for compiling Hardware Description Language (HDL) and XML
 protocol definitions into C++ header files for network packet manipulation.
 """
 
 from setuptools import setup, find_packages
 import os
 
+
 # Read the README file for long description
 def read_readme():
-    readme_path = os.path.join(os.path.dirname(__file__), 'README.md')
+    readme_path = os.path.join(os.path.dirname(__file__), "README.md")
     if os.path.exists(readme_path):
-        with open(readme_path, 'r', encoding='utf-8') as f:
+        with open(readme_path, "r", encoding="utf-8") as f:
             return f.read()
     return "CPPScapy HDL Compiler - Network Protocol Header Generator"
 
+
 # Read requirements
 def read_requirements():
-    req_path = os.path.join(os.path.dirname(__file__), 'requirements.txt')
+    req_path = os.path.join(os.path.dirname(__file__), "requirements.txt")
     if os.path.exists(req_path):
-        with open(req_path, 'r', encoding='utf-8') as f:
-            return [line.strip() for line in f if line.strip() and not line.startswith('#')]
+        with open(req_path, "r", encoding="utf-8") as f:
+            return [
+                line.strip() for line in f if line.strip() and not line.startswith("#")
+            ]
     return []
+
 
 setup(
     name="cppscapy-hdl-compiler",
@@ -52,6 +57,11 @@ setup(
     ],
     python_requires=">=3.7",
     install_requires=read_requirements(),
+    extras_require={
+        "xml": ["lxml>=4.6.0"],
+        "dev": ["lxml>=4.6.0", "black", "flake8", "pytest"],
+        "all": ["lxml>=4.6.0", "black", "flake8", "pytest"],
+    },
     entry_points={
         "console_scripts": [
             "hdl-compile=cppscapy.hdl_compiler:main",
@@ -72,6 +82,6 @@ setup(
     project_urls={
         "Bug Reports": "https://github.com/Anluren/cppscapy/issues",
         "Source": "https://github.com/Anluren/cppscapy",
-        "Documentation": "https://github.com/Anluren/cppscapy/blob/main/README.md",
+        "Documentation": ("https://github.com/Anluren/cppscapy/blob/main/README.md"),
     },
 )

@@ -8,6 +8,7 @@ A convenient C++ library for constructing standard network headers (MAC, IPv4, I
 - **HDL Compiler**: Generates type-safe C++ classes from HDL or XML definitions
 - **XML Schema Validation**: XSD schema support for XML protocol definitions
 - **Format Converter**: Convert between HDL and XML formats seamlessly
+- **PCAP Support**: Read from and write to pcap files (Wireshark compatible)
 - **25+ Protocol Headers**: Comprehensive protocol support including IPv4/IPv6, TCP/UDP, DHCP, DNS, VPN protocols
 - **MAC Address Support**: Parse, create, and manipulate MAC addresses
 - **IPv4/IPv6 Address Support**: Handle IP addresses with various input formats
@@ -363,6 +364,82 @@ auto packet = builder
     .payload(http_request)
     .build();
 ```
+
+## PCAP Support
+
+CPPScapy now includes full support for reading from and writing to pcap files, making it easy to work with packet captures and integrate with tools like Wireshark.
+
+### Writing PCAP Files
+
+```cpp
+#include "pcap_support.h"
+#include "header_dsl.h"
+
+using namespace cppscapy;
+
+// Create a PCAP writer
+pcap::PcapWriter writer("output.pcap");
+writer.open();
+
+// Create and write packets
+dsl::EthernetHeader eth;
+eth.set_dst_mac(0x001122334455ULL);
+eth.set_src_mac(0x665544332211ULL);
+eth.set_ethertype(dsl::EtherType::IPv4);
+
+dsl::UDPHeader udp;
+udp.set_src_port(12345);
+udp.set_dst_port(80);
+udp.set_payload_size(13);
+udp.update_computed_fields();
+
+std::vector<uint8_t> payload = {'H', 'e', 'l', 'l', 'o', ',', ' ', 'W', 'o', 'r', 'l', 'd', '!'};
+auto packet = pcap::utils::create_udp_packet(eth, udp, payload);
+
+writer.write_packet(packet);
+writer.close();
+```
+
+### Reading PCAP Files
+
+```cpp
+// Create a PCAP reader
+pcap::PcapReader reader("input.pcap");
+reader.open();
+
+pcap::Packet packet;
+while (reader.read_packet(packet)) {
+    // Parse headers
+    dsl::EthernetHeader eth;
+    if (packet.parse_header(eth, 0)) {
+        std::cout << "Ethernet: " << std::hex << eth.src_mac() 
+                  << " -> " << eth.dst_mac() << std::endl;
+    }
+    
+    // Display packet info and hex dump
+    pcap::utils::print_packet_info(packet);
+    pcap::utils::hex_dump(packet, 64);
+}
+
+reader.close();
+```
+
+### Wireshark Integration
+
+The generated pcap files are fully compatible with Wireshark and other standard tools:
+
+```bash
+# View in Wireshark
+wireshark output.pcap
+
+# Analyze with tcpdump
+tcpdump -r output.pcap -v
+
+# Convert to text with tshark
+tshark -r output.pcap
+```
+
+For complete PCAP documentation, see [docs/PCAP_SUPPORT.md](docs/PCAP_SUPPORT.md).
 
 ## Requirements
 

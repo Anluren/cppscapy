@@ -59,6 +59,87 @@ void hex_dump(const Packet &packet, size_t max_bytes) {
   std::cout << std::dec; // Reset to decimal
 }
 
+// Print hex dump in specific format (8-digit offset, 4-byte groups, ASCII)
+void hex_dump_formatted(const Packet &packet, size_t max_bytes) {
+  hex_dump_data(packet.data(), max_bytes);
+}
+
+// Print hex dump of raw data in specific format
+void hex_dump_data(const std::vector<uint8_t> &data, size_t max_bytes) {
+  size_t bytes_to_print =
+      (max_bytes == 0) ? data.size() : std::min(data.size(), max_bytes);
+
+  for (size_t i = 0; i < bytes_to_print; i += 16) {
+    // Print 8-digit hex offset with colon
+    std::cout << std::setfill('0') << std::setw(8) << std::hex << i << ": ";
+
+    // Print hex bytes in groups of 4
+    for (size_t j = 0; j < 16; ++j) {
+      if (i + j < bytes_to_print) {
+        std::cout << std::setfill('0') << std::setw(2) << std::hex
+                  << static_cast<unsigned int>(data[i + j]);
+      } else {
+        std::cout << "  ";
+      }
+
+      // Add space after every 2 bytes, extra space after 8 bytes
+      if ((j + 1) % 2 == 0) {
+        std::cout << " ";
+      }
+      if ((j + 1) % 8 == 0) {
+        std::cout << " ";
+      }
+    }
+
+    // Print ASCII representation
+    for (size_t j = 0; j < 16 && i + j < bytes_to_print; ++j) {
+      char c = static_cast<char>(data[i + j]);
+      std::cout << (std::isprint(c) ? c : '.');
+    }
+
+    std::cout << std::endl;
+  }
+  std::cout << std::dec; // Reset to decimal
+}
+
+// Print hex dump of raw data pointer in specific format
+void hex_dump_data(const uint8_t* data, size_t data_size, size_t max_bytes) {
+  size_t bytes_to_print =
+      (max_bytes == 0) ? data_size : std::min(data_size, max_bytes);
+
+  for (size_t i = 0; i < bytes_to_print; i += 16) {
+    // Print 8-digit hex offset with colon
+    std::cout << std::setfill('0') << std::setw(8) << std::hex << i << ": ";
+
+    // Print hex bytes in groups of 4
+    for (size_t j = 0; j < 16; ++j) {
+      if (i + j < bytes_to_print) {
+        std::cout << std::setfill('0') << std::setw(2) << std::hex
+                  << static_cast<unsigned int>(data[i + j]);
+      } else {
+        std::cout << "  ";
+      }
+
+      // Add space after every 2 bytes, extra space after 8 bytes
+      if ((j + 1) % 2 == 0) {
+        std::cout << " ";
+      }
+      if ((j + 1) % 8 == 0) {
+        std::cout << " ";
+      }
+    }
+
+    // Print ASCII representation
+    for (size_t j = 0; j < 16 && i + j < bytes_to_print; ++j) {
+      char c = static_cast<char>(data[i + j]);
+      std::cout << (std::isprint(c) ? c : '.');
+    }
+
+    std::cout << std::endl;
+  }
+  std::cout << std::dec; // Reset to decimal
+}
+
 // Create a sample packet for testing
 Packet create_sample_packet() {
   // Create Ethernet header
